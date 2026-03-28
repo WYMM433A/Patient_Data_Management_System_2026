@@ -1,0 +1,1501 @@
+# ============================================================
+# PDMS - Patient Data Management System
+# Master Context File for GitHub Copilot
+# ============================================================
+
+## Project Overview
+A secure, web-based Patient Data Management System (PDMS)
+designed for a small to medium-sized outpatient primary
+healthcare clinic serving both acute and chronic care patients.
+
+The system manages patient clinical data from registration
+through diagnosis, treatment, and long-term chronic disease
+monitoring. It is NOT a full Hospital Management System.
+
+Primary audience: General practitioners, nurses, receptionists,
+lab technicians, and patients in an outpatient clinic setting.
+
+## Project Type
+University IT Project
+Focus: Software Architecture + Advanced Database Concepts
+Timeline: 2 months
+Presentation: Live demo with two patient scenarios
+
+---
+
+## ✅ IN SCOPE
+- Patient registration and profile management
+- Appointment scheduling
+- Outpatient clinical encounters (acute and follow-up visits)
+- SOAP format clinical notes
+- ICD-10 diagnoses
+- Vitals recording and trend tracking
+- Prescriptions with allergy safety check
+- Lab orders and results with abnormal flagging
+- Basic imaging record keeping
+- Allergy management
+- Medical history (acute and chronic)
+- Vaccinations
+- Referrals to external specialists
+- Chronic disease care plans
+- Role-based access control (RBAC)
+- Full audit logging
+
+## ❌ OUT OF SCOPE
+- Inpatient ward and bed management
+- Surgical theatre management
+- ICU monitoring systems
+- Billing and insurance processing
+- Medication inventory and pharmacy
+- Staff scheduling and payroll
+- Multi-hospital or multi-branch networks
+- HL7/FHIR interoperability (future extension)
+- Real-time notifications (future extension)
+- AI clinical decision support (future extension)
+
+---
+
+## 👥 System Actors and Roles
+
+### 1. System Admin
+- Manages user accounts (create, update, deactivate)
+- Assigns roles and permissions to users
+- Views and filters system audit logs
+- Configures system roles and permissions
+
+### 2. Doctor / Physician
+- Searches and views full patient profiles and history
+- Creates and closes clinical encounters
+- Writes SOAP format clinical notes
+- Records ICD-10 diagnoses (primary and secondary)
+- Issues prescriptions (system checks allergies)
+- Orders lab tests with priority levels
+- Views lab results and imaging records
+- Creates specialist referrals
+- Creates and updates patient care plans
+- Views trends in vitals and lab results over time
+
+### 3. Nurse
+- Records patient vitals per encounter
+- Views patient profiles and encounter history
+- Updates care and nursing notes
+- Views and updates vaccination records
+
+### 4. Receptionist
+- Registers new patients
+- Searches existing patients
+- Books, reschedules, and cancels appointments
+- Checks patients in on arrival
+
+### 5. Lab Technician
+- Views pending lab orders (sorted by priority)
+- Uploads lab results with values and file attachments
+- Flags abnormal results
+- Updates lab order status
+
+### 6. Patient
+- Views own medical records and visit history
+- Views prescriptions and lab results
+- Books and cancels appointments
+- Views vaccination history
+
+---
+
+## 🏥 Two Core Clinical Workflows
+
+### Workflow 1: Acute Visit (New or Returning Patient)
+Used for: Cold, flu, injury, infection, one-time consultation
+
+Flow:
+1.  Receptionist registers patient or searches existing record
+2.  Receptionist books appointment
+3.  Nurse records vitals on patient arrival
+4.  Doctor opens encounter → create_encounter stored proc fires
+5.  Doctor writes SOAP note
+6.  Doctor records ICD-10 diagnosis
+7.  Doctor issues prescription → allergy check runs
+8.  Doctor orders lab test if needed
+9.  Lab technician uploads result → abnormal flag set if needed
+10. Doctor closes encounter
+11. Patient views records via portal
+
+### Workflow 2: Chronic Disease Follow-up
+Used for: Diabetes, hypertension, asthma, ongoing conditions
+
+Flow:
+1.  Receptionist books scheduled follow-up appointment
+2.  Nurse records vitals (system shows previous values)
+3.  Doctor opens encounter
+4.  Doctor reviews previous encounters, lab trends, care plan
+5.  Doctor writes SOAP note referencing previous assessment
+6.  Doctor orders periodic labs (e.g. quarterly HbA1c)
+7.  Lab technician uploads results
+8.  Doctor reviews results and trending data
+9.  Doctor updates care plan goals and interventions
+10. Doctor updates or renews prescriptions
+11. Doctor creates referral if complication detected
+12. Encounter closed, next follow-up scheduled
+
+---
+
+## 🗄️ Database Design
+
+### Database Engine
+Microsoft SQL Server (local development via SSMS)
+Deployed on AWS EC2 (SQL Server on Windows or RDS)
+
+### Connection Details (local development)
+Server: localhost
+Database: pdms_db
+Auth: Windows Authentication (local)
+      SQL Server Auth (EC2 production)
+
+### Advanced Database Concepts Demonstrated
+- Normalization: All 20 entities in 3NF/BCNF
+- Indexing: On patient_id, encounter_date, doctor_id,
+            is_abnormal, ordered_at, icd_code
+- Stored Procedures: usp_create_encounter,
+                     usp_record_prescription
+- Triggers: trg_audit on all clinical tables,
+            trg_calculate_bmi on vitals,
+            trg_flag_abnormal_vitals on vitals
+- ACID Transactions: All stored procs use
+                     BEGIN/COMMIT/ROLLBACK TRANSACTION
+- JSON Storage: audit_logs old_value and new_value
+                stored as NVARCHAR(MAX) using FOR JSON
+- Full-Text Search: On clinical_notes and diagnoses
+                    using SQL Server FTS CONTAINS()
+- Soft Delete: is_removed + valid_from + valid_until
+- Three Timestamps: recorded_at, event_date, validated_at
+- Redis Caching: Patient summaries and RBAC lookups
+
+---
+
+### SQL Server Data Types Used
+
+| Concept          | SQL Server Type       | Notes                    |
+|------------------|-----------------------|--------------------------|
+| Primary Key      | UNIQUEIDENTIFIER      | DEFAULT NEWID()          |
+| Short text       | NVARCHAR(n)           | e.g. NVARCHAR(100)       |
+| Long text        | NVARCHAR(MAX)         | replaces TEXT            |
+| Boolean          | BIT                   | 1=true, 0=false          |
+| Timestamp        | DATETIME2             | replaces TIMESTAMP       |
+| Auto-increment   | INT IDENTITY(1,1)     | replaces SERIAL          |
+| JSON data        | NVARCHAR(MAX)         | validate with ISJSON()   |
+| Decimal numbers  | DECIMAL(10,2)         | for BMI, measurements    |
+
+---
+
+### 20 Database Entities (SQL Server Syntax)
+
+─────────────────────────────────────────────────────
+#### RBAC GROUP
+─────────────────────────────────────────────────────
+
+1. USERS
+   user_id        UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+   username       NVARCHAR(100)     UNIQUE NOT NULL
+   password_hash  NVARCHAR(255)     NOT NULL (bcrypt)
+   email          NVARCHAR(150)     UNIQUE NOT NULL
+   role_id        UNIQUEIDENTIFIER  FK → ROLES
+   first_name     NVARCHAR(100)
+   last_name      NVARCHAR(100)
+   is_active      BIT               DEFAULT 1
+   created_at     DATETIME2         DEFAULT GETDATE()
+   last_login     DATETIME2
+
+2. ROLES
+   role_id        UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+   role_name      NVARCHAR(50)      UNIQUE NOT NULL
+   description    NVARCHAR(MAX)
+   created_at     DATETIME2         DEFAULT GETDATE()
+
+   Seed values:
+   - system_admin
+   - doctor
+   - nurse
+   - receptionist
+   - lab_technician
+   - patient
+
+3. PERMISSIONS
+   permission_id    UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+   permission_name  NVARCHAR(100)     UNIQUE NOT NULL
+   module           NVARCHAR(50)
+   action           NVARCHAR(20)
+   description      NVARCHAR(MAX)
+
+   Example permissions:
+   - view_patient_record
+   - create_patient
+   - create_encounter
+   - write_clinical_notes
+   - issue_prescription
+   - order_lab_test
+   - upload_lab_result
+   - view_audit_logs
+   - manage_users
+
+4. ROLE_PERMISSIONS (junction table)
+   role_id          UNIQUEIDENTIFIER  FK → ROLES
+   permission_id    UNIQUEIDENTIFIER  FK → PERMISSIONS
+   PRIMARY KEY (role_id, permission_id)
+
+─────────────────────────────────────────────────────
+#### PATIENT GROUP
+─────────────────────────────────────────────────────
+
+5. PATIENTS
+   patient_id              UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+   mrn                     NVARCHAR(20)      UNIQUE NOT NULL
+   first_name              NVARCHAR(100)     NOT NULL
+   last_name               NVARCHAR(100)     NOT NULL
+   date_of_birth           DATE              NOT NULL
+   gender                  NVARCHAR(20)
+   blood_type              NVARCHAR(5)
+   phone                   NVARCHAR(20)
+   email                   NVARCHAR(150)
+   address                 NVARCHAR(MAX)
+   emergency_contact_name  NVARCHAR(150)
+   emergency_contact_phone NVARCHAR(20)
+   created_at              DATETIME2         DEFAULT GETDATE()
+
+   MRN format: PDMS-YYYY-NNNNN (e.g. PDMS-2026-00142)
+   Generated in Python service layer not DB
+
+6. MEDICAL_HISTORY
+   history_id      UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+   patient_id      UNIQUEIDENTIFIER  FK → PATIENTS
+   condition_name  NVARCHAR(200)     NOT NULL
+   icd_code        NVARCHAR(10)
+   onset_date      DATE
+   resolution_date DATE              (NULL = still ongoing)
+   is_chronic      BIT               DEFAULT 0
+   is_removed      BIT               DEFAULT 0
+   valid_from      DATE
+   valid_until     DATE
+   notes           NVARCHAR(MAX)
+   recorded_by     UNIQUEIDENTIFIER  FK → USERS
+   recorded_at     DATETIME2         DEFAULT GETDATE()
+   event_date      DATE
+   validated_at    DATETIME2
+
+7. ALLERGIES
+   allergy_id      UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+   patient_id      UNIQUEIDENTIFIER  FK → PATIENTS
+   allergen        NVARCHAR(200)     NOT NULL
+   reaction_type   NVARCHAR(100)
+   severity        NVARCHAR(20)      (mild/moderate/severe)
+   is_removed      BIT               DEFAULT 0
+   valid_from      DATE
+   valid_until     DATE
+   recorded_by     UNIQUEIDENTIFIER  FK → USERS
+   recorded_at     DATETIME2         DEFAULT GETDATE()
+   event_date      DATE
+   validated_at    DATETIME2
+
+8. VACCINATIONS
+   vaccination_id  UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+   patient_id      UNIQUEIDENTIFIER  FK → PATIENTS
+   vaccine_name    NVARCHAR(200)     NOT NULL
+   dose_number     INT
+   administered_by UNIQUEIDENTIFIER  FK → USERS
+   administered_at DATE              NOT NULL
+   next_due_date   DATE
+   notes           NVARCHAR(MAX)
+   recorded_at     DATETIME2         DEFAULT GETDATE()
+   event_date      DATE
+   validated_at    DATETIME2
+
+─────────────────────────────────────────────────────
+#### SCHEDULING GROUP
+─────────────────────────────────────────────────────
+
+9. APPOINTMENTS
+   appointment_id  UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+   patient_id      UNIQUEIDENTIFIER  FK → PATIENTS
+   doctor_id       UNIQUEIDENTIFIER  FK → USERS
+   scheduled_at    DATETIME2         NOT NULL
+   reason          NVARCHAR(MAX)
+   status          NVARCHAR(20)      DEFAULT 'scheduled'
+                   CHECK status IN (
+                     'scheduled','confirmed',
+                     'completed','cancelled')
+   notes           NVARCHAR(MAX)
+   created_by      UNIQUEIDENTIFIER  FK → USERS
+   created_at      DATETIME2         DEFAULT GETDATE()
+
+─────────────────────────────────────────────────────
+#### CLINICAL ENCOUNTER GROUP
+─────────────────────────────────────────────────────
+
+10. ENCOUNTERS
+    encounter_id    UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+    patient_id      UNIQUEIDENTIFIER  FK → PATIENTS
+    doctor_id       UNIQUEIDENTIFIER  FK → USERS
+    appointment_id  UNIQUEIDENTIFIER  FK → APPOINTMENTS NULL
+    encounter_date  DATETIME2         NOT NULL DEFAULT GETDATE()
+    encounter_type  NVARCHAR(20)
+                    CHECK encounter_type IN (
+                      'outpatient','follow-up','emergency')
+    chief_complaint NVARCHAR(MAX)
+    status          NVARCHAR(10)      DEFAULT 'open'
+                    CHECK status IN ('open','closed')
+    visit_number    INT               DEFAULT 1
+    created_at      DATETIME2         DEFAULT GETDATE()
+    closed_at       DATETIME2
+
+11. CLINICAL_NOTES
+    note_id         UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+    encounter_id    UNIQUEIDENTIFIER  FK → ENCOUNTERS
+    doctor_id       UNIQUEIDENTIFIER  FK → USERS
+    subjective      NVARCHAR(MAX)
+    objective       NVARCHAR(MAX)
+    assessment      NVARCHAR(MAX)
+    plan            NVARCHAR(MAX)
+    recorded_at     DATETIME2         DEFAULT GETDATE()
+    event_date      DATETIME2
+    validated_at    DATETIME2
+    updated_at      DATETIME2
+
+12. DIAGNOSES
+    diagnosis_id    UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+    encounter_id    UNIQUEIDENTIFIER  FK → ENCOUNTERS
+    patient_id      UNIQUEIDENTIFIER  FK → PATIENTS
+    icd_code        NVARCHAR(10)      NOT NULL
+    description     NVARCHAR(MAX)
+    diagnosis_type  NVARCHAR(20)
+                    CHECK diagnosis_type IN
+                    ('primary','secondary')
+    condition       NVARCHAR(20)
+                    CHECK condition IN (
+                      'suspected','confirmed',
+                      'excluded','recurrent')
+    timing          NVARCHAR(20)
+                    CHECK timing IN (
+                      'acute','chronic',
+                      'complication','recurrence')
+    is_chronic      BIT               DEFAULT 0
+    diagnosed_by    UNIQUEIDENTIFIER  FK → USERS
+    recorded_at     DATETIME2         DEFAULT GETDATE()
+    event_date      DATE
+    validated_at    DATETIME2
+
+13. VITALS
+    vital_id            UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+    patient_id          UNIQUEIDENTIFIER  FK → PATIENTS
+    encounter_id        UNIQUEIDENTIFIER  FK → ENCOUNTERS
+    recorded_by         UNIQUEIDENTIFIER  FK → USERS
+    blood_pressure_sys  INT
+    blood_pressure_dia  INT
+    heart_rate          INT
+    temperature         DECIMAL(4,1)
+    weight_kg           DECIMAL(5,2)
+    height_cm           DECIMAL(5,2)
+    oxygen_saturation   INT
+    respiratory_rate    INT
+    bmi                 DECIMAL(4,2)    (auto-calculated by trigger)
+    is_abnormal         BIT             DEFAULT 0
+    recorded_at         DATETIME2       DEFAULT GETDATE()
+    event_date          DATETIME2
+    validated_at        DATETIME2
+
+─────────────────────────────────────────────────────
+#### MEDICATION GROUP
+─────────────────────────────────────────────────────
+
+14. PRESCRIPTIONS
+    prescription_id UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+    encounter_id    UNIQUEIDENTIFIER  FK → ENCOUNTERS
+    patient_id      UNIQUEIDENTIFIER  FK → PATIENTS
+    doctor_id       UNIQUEIDENTIFIER  FK → USERS
+    drug_name       NVARCHAR(200)     NOT NULL
+    dosage          NVARCHAR(50)
+    frequency       NVARCHAR(50)
+    duration        NVARCHAR(50)
+    route           NVARCHAR(30)
+                    CHECK route IN (
+                      'oral','IV','topical',
+                      'inhaled','subcutaneous')
+    instructions    NVARCHAR(MAX)
+    is_active       BIT               DEFAULT 1
+    is_removed      BIT               DEFAULT 0
+    issued_at       DATETIME2         DEFAULT GETDATE()
+    event_date      DATETIME2
+    validated_at    DATETIME2
+
+─────────────────────────────────────────────────────
+#### DIAGNOSTICS GROUP
+─────────────────────────────────────────────────────
+
+15. LAB_ORDERS
+    order_id        UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+    encounter_id    UNIQUEIDENTIFIER  FK → ENCOUNTERS
+    patient_id      UNIQUEIDENTIFIER  FK → PATIENTS
+    ordered_by      UNIQUEIDENTIFIER  FK → USERS
+    test_name       NVARCHAR(200)     NOT NULL
+    test_category   NVARCHAR(100)
+                    CHECK test_category IN (
+                      'hematology','biochemistry',
+                      'microbiology','serology',
+                      'urinalysis','imaging')
+    priority        NVARCHAR(20)      DEFAULT 'routine'
+                    CHECK priority IN
+                    ('routine','urgent','stat')
+    status          NVARCHAR(20)      DEFAULT 'ordered'
+                    CHECK status IN (
+                      'ordered','in-progress','completed')
+    ordered_at      DATETIME2         DEFAULT GETDATE()
+    event_date      DATETIME2
+
+16. CREATE TABLE lab_test_templates (
+    template_id      UNIQUEIDENTIFIER  PRIMARY KEY DEFAULT NEWID(),
+    test_name        NVARCHAR(200)     NOT NULL,
+    test_code        NVARCHAR(20)      NOT NULL UNIQUE,
+    -- short code like CBC, BMP, LFT, HbA1c, EUCr
+    test_category    NVARCHAR(50)      NOT NULL,
+    description      NVARCHAR(MAX),
+    is_active        BIT               DEFAULT 1
+)
+
+17. CREATE TABLE lab_test_parameters (
+    parameter_id     UNIQUEIDENTIFIER  PRIMARY KEY DEFAULT NEWID(),
+    template_id      UNIQUEIDENTIFIER  NOT NULL FK → lab_test_templates,
+    parameter_name   NVARCHAR(100)     NOT NULL,
+    -- e.g. "Hemoglobin", "WBC", "Sodium"
+    display_order    INT               NOT NULL,
+    -- controls order they appear on form
+    unit             NVARCHAR(30),
+    normal_range_min DECIMAL(10,3),
+    normal_range_max DECIMAL(10,3),
+    normal_range_text NVARCHAR(50),
+    -- for text results like "Negative" or "Yellow"
+    value_type       NVARCHAR(20),
+    -- numeric / text / positive_negative
+    is_required      BIT               DEFAULT 1
+)
+
+
+
+CREATE TABLE lab_results (
+    result_id        UNIQUEIDENTIFIER  PRIMARY KEY DEFAULT NEWID(),
+    order_id         UNIQUEIDENTIFIER  NOT NULL FK → lab_orders,
+    patient_id       UNIQUEIDENTIFIER  NOT NULL FK → patients,
+    parameter_id     UNIQUEIDENTIFIER  FK → lab_test_parameters,
+    -- links back to the template parameter
+    uploaded_by      UNIQUEIDENTIFIER  NOT NULL FK → users,
+    parameter_name   NVARCHAR(100)     NOT NULL,
+    -- denormalized copy for quick display
+    result_value     NVARCHAR(100)     NOT NULL,
+    unit             NVARCHAR(30),
+    normal_range     NVARCHAR(50),
+    is_abnormal      BIT               DEFAULT 0,
+    abnormal_level   NVARCHAR(20),
+    -- low / borderline / high / critical
+    notes            NVARCHAR(MAX),
+    result_file_url  NVARCHAR(500),
+    resulted_at      DATETIME2         DEFAULT GETDATE(),
+    validated_at     DATETIME2,
+    validated_by     UNIQUEIDENTIFIER  FK → users
+)
+
+17. IMAGING_RECORDS
+    imaging_id        UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+    patient_id        UNIQUEIDENTIFIER  FK → PATIENTS
+    encounter_id      UNIQUEIDENTIFIER  FK → ENCOUNTERS
+    ordered_by        UNIQUEIDENTIFIER  FK → USERS
+    imaging_type      NVARCHAR(50)
+                      CHECK imaging_type IN (
+                        'X-ray','Ultrasound',
+                        'MRI','CT','ECG')
+    body_part         NVARCHAR(100)
+    findings          NVARCHAR(MAX)
+    image_url         NVARCHAR(500)
+    radiologist_notes NVARCHAR(MAX)
+    performed_at      DATETIME2         DEFAULT GETDATE()
+    event_date        DATETIME2
+    validated_at      DATETIME2
+
+─────────────────────────────────────────────────────
+#### CARE COORDINATION GROUP
+─────────────────────────────────────────────────────
+
+18. REFERRALS
+    referral_id     UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+    encounter_id    UNIQUEIDENTIFIER  FK → ENCOUNTERS
+    patient_id      UNIQUEIDENTIFIER  FK → PATIENTS
+    referred_by     UNIQUEIDENTIFIER  FK → USERS
+    specialty       NVARCHAR(100)     NOT NULL
+    reason          NVARCHAR(MAX)
+    urgency         NVARCHAR(20)
+                    CHECK urgency IN ('routine','urgent')
+    status          NVARCHAR(20)      DEFAULT 'pending'
+                    CHECK status IN (
+                      'pending','accepted','completed')
+    referred_at     DATETIME2         DEFAULT GETDATE()
+    event_date      DATETIME2
+
+19. CARE_PLANS
+    plan_id         UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+    patient_id      UNIQUEIDENTIFIER  FK → PATIENTS
+    doctor_id       UNIQUEIDENTIFIER  FK → USERS
+    condition       NVARCHAR(200)     NOT NULL
+    goals           NVARCHAR(MAX)
+    interventions   NVARCHAR(MAX)
+    start_date      DATE              NOT NULL
+    review_date     DATE
+    status          NVARCHAR(20)      DEFAULT 'active'
+                    CHECK status IN (
+                      'active','completed','cancelled')
+    notes           NVARCHAR(MAX)
+    created_at      DATETIME2         DEFAULT GETDATE()
+    updated_at      DATETIME2
+
+─────────────────────────────────────────────────────
+#### SECURITY GROUP
+─────────────────────────────────────────────────────
+
+20. AUDIT_LOGS
+    log_id          UNIQUEIDENTIFIER  PK DEFAULT NEWID()
+    user_id         UNIQUEIDENTIFIER  FK → USERS
+    action          NVARCHAR(20)
+                    CHECK action IN (
+                      'CREATE','UPDATE',
+                      'DELETE','VIEW')
+    module          NVARCHAR(50)
+    table_affected  NVARCHAR(100)
+    record_id       UNIQUEIDENTIFIER
+    old_value       NVARCHAR(MAX)     (JSON string via FOR JSON)
+    new_value       NVARCHAR(MAX)     (JSON string via FOR JSON)
+    ip_address      NVARCHAR(45)
+    user_agent      NVARCHAR(500)
+    timestamp       DATETIME2         DEFAULT GETDATE()
+
+    Rules:
+    - No DELETE or UPDATE endpoint for audit_logs ever
+    - Populated by SQL Server triggers (INSERT/UPDATE/DELETE)
+    - Also populated by app middleware for VIEW actions
+    - old_value and new_value stored using FOR JSON PATH
+
+---
+
+### Stored Procedures (T-SQL)
+
+#### usp_create_encounter
+CREATE PROCEDURE usp_create_encounter
+    @p_patient_id       UNIQUEIDENTIFIER,
+    @p_doctor_id        UNIQUEIDENTIFIER,
+    @p_appointment_id   UNIQUEIDENTIFIER = NULL,
+    @p_encounter_type   NVARCHAR(20),
+    @p_chief_complaint  NVARCHAR(MAX),
+    @p_created_by       UNIQUEIDENTIFIER,
+    @p_encounter_id     UNIQUEIDENTIFIER OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+
+        -- Step 1: Generate new encounter ID
+        SET @p_encounter_id = NEWID();
+
+        -- Step 2: Get visit number for this patient
+        DECLARE @visit_number INT;
+        SELECT @visit_number = ISNULL(COUNT(*), 0) + 1
+        FROM encounters
+        WHERE patient_id = @p_patient_id;
+
+        -- Step 3: Insert encounter
+        INSERT INTO encounters (
+            encounter_id, patient_id, doctor_id,
+            appointment_id, encounter_type,
+            chief_complaint, status,
+            visit_number, created_at
+        )
+        VALUES (
+            @p_encounter_id, @p_patient_id, @p_doctor_id,
+            @p_appointment_id, @p_encounter_type,
+            @p_chief_complaint, 'open',
+            @visit_number, GETDATE()
+        );
+
+        -- Step 4: Update appointment status if provided
+        IF @p_appointment_id IS NOT NULL
+        BEGIN
+            UPDATE appointments
+            SET status = 'completed'
+            WHERE appointment_id = @p_appointment_id
+            AND status != 'cancelled';
+        END
+
+        -- Step 5: Insert empty SOAP note shell
+        INSERT INTO clinical_notes (
+            note_id, encounter_id, doctor_id, recorded_at
+        )
+        VALUES (
+            NEWID(), @p_encounter_id,
+            @p_doctor_id, GETDATE()
+        );
+
+        -- Step 6: Insert audit log
+        INSERT INTO audit_logs (
+            log_id, user_id, action,
+            table_affected, record_id, timestamp
+        )
+        VALUES (
+            NEWID(), @p_created_by, 'CREATE',
+            'encounters', @p_encounter_id, GETDATE()
+        );
+
+        COMMIT TRANSACTION;
+
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+
+-- How to call from Python:
+-- EXEC usp_create_encounter
+--   @p_patient_id = ?,
+--   @p_doctor_id = ?,
+--   @p_encounter_id = ? OUTPUT
+
+
+#### usp_record_prescription
+CREATE PROCEDURE usp_record_prescription
+    @p_encounter_id   UNIQUEIDENTIFIER,
+    @p_patient_id     UNIQUEIDENTIFIER,
+    @p_doctor_id      UNIQUEIDENTIFIER,
+    @p_drug_name      NVARCHAR(200),
+    @p_dosage         NVARCHAR(50),
+    @p_frequency      NVARCHAR(50),
+    @p_duration       NVARCHAR(50),
+    @p_route          NVARCHAR(30),
+    @p_instructions   NVARCHAR(MAX),
+    @p_prescription_id UNIQUEIDENTIFIER OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+
+        -- Step 1: Check encounter is open
+        IF NOT EXISTS (
+            SELECT 1 FROM encounters
+            WHERE encounter_id = @p_encounter_id
+            AND status = 'open'
+        )
+        BEGIN
+            RAISERROR('ENCOUNTER_CLOSED: Cannot prescribe
+                       on a closed encounter.', 16, 1);
+            RETURN;
+        END
+
+        -- Step 2: Check patient allergies
+        IF EXISTS (
+            SELECT 1 FROM allergies
+            WHERE patient_id = @p_patient_id
+            AND is_removed = 0
+            AND LOWER(allergen) = LOWER(@p_drug_name)
+        )
+        BEGIN
+            RAISERROR('ALLERGY_CONFLICT: Patient is allergic
+                       to %s.', 16, 1, @p_drug_name);
+            RETURN;
+        END
+
+        -- Step 3: Insert prescription
+        SET @p_prescription_id = NEWID();
+
+        INSERT INTO prescriptions (
+            prescription_id, encounter_id, patient_id,
+            doctor_id, drug_name, dosage, frequency,
+            duration, route, instructions,
+            is_active, issued_at
+        )
+        VALUES (
+            @p_prescription_id, @p_encounter_id,
+            @p_patient_id, @p_doctor_id,
+            @p_drug_name, @p_dosage, @p_frequency,
+            @p_duration, @p_route, @p_instructions,
+            1, GETDATE()
+        );
+
+        -- Step 4: Insert audit log
+        INSERT INTO audit_logs (
+            log_id, user_id, action,
+            table_affected, record_id, timestamp
+        )
+        VALUES (
+            NEWID(), @p_doctor_id, 'CREATE',
+            'prescriptions', @p_prescription_id, GETDATE()
+        );
+
+        COMMIT TRANSACTION;
+
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END;
+
+---
+
+### Triggers (T-SQL)
+
+#### trg_audit_encounters (template — repeat for all tables)
+CREATE TRIGGER trg_audit_encounters
+ON encounters
+AFTER INSERT, UPDATE, DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @action NVARCHAR(10);
+
+    IF EXISTS (SELECT 1 FROM inserted)
+       AND EXISTS (SELECT 1 FROM deleted)
+        SET @action = 'UPDATE';
+    ELSE IF EXISTS (SELECT 1 FROM inserted)
+        SET @action = 'CREATE';
+    ELSE
+        SET @action = 'DELETE';
+
+    INSERT INTO audit_logs (
+        log_id, action, table_affected,
+        old_value, new_value, timestamp
+    )
+    SELECT
+        NEWID(),
+        @action,
+        'encounters',
+        (SELECT * FROM deleted FOR JSON PATH),
+        (SELECT * FROM inserted FOR JSON PATH),
+        GETDATE();
+END;
+
+-- Apply same trigger pattern to:
+-- clinical_notes, diagnoses, vitals, prescriptions,
+-- lab_orders, lab_results, imaging_records,
+-- medical_history, allergies, vaccinations,
+-- referrals, care_plans
+
+
+#### trg_calculate_bmi
+CREATE TRIGGER trg_calculate_bmi
+ON vitals
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE v
+    SET bmi = ROUND(
+        i.weight_kg / POWER(i.height_cm / 100.0, 2), 2
+    )
+    FROM vitals v
+    INNER JOIN inserted i ON v.vital_id = i.vital_id
+    WHERE i.weight_kg IS NOT NULL
+    AND i.height_cm IS NOT NULL
+    AND i.height_cm > 0;
+END;
+
+
+#### trg_flag_abnormal_vitals
+CREATE TRIGGER trg_flag_abnormal_vitals
+ON vitals
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE v
+    SET is_abnormal = 1
+    FROM vitals v
+    INNER JOIN inserted i ON v.vital_id = i.vital_id
+    WHERE i.heart_rate > 100
+       OR i.heart_rate < 60
+       OR i.blood_pressure_sys > 140
+       OR i.blood_pressure_sys < 90
+       OR i.blood_pressure_dia > 90
+       OR i.oxygen_saturation < 95
+       OR i.temperature > 37.5
+       OR i.temperature < 36.0
+       OR i.respiratory_rate > 20
+       OR i.respiratory_rate < 12;
+END;
+
+---
+
+### Performance Indexes (T-SQL)
+
+CREATE INDEX idx_patients_mrn
+    ON patients(mrn);
+
+CREATE INDEX idx_patients_name
+    ON patients(last_name, first_name);
+
+CREATE INDEX idx_encounters_patient
+    ON encounters(patient_id);
+
+CREATE INDEX idx_encounters_doctor
+    ON encounters(doctor_id);
+
+CREATE INDEX idx_encounters_date
+    ON encounters(encounter_date);
+
+CREATE INDEX idx_lab_orders_patient
+    ON lab_orders(patient_id);
+
+CREATE INDEX idx_lab_orders_status
+    ON lab_orders(status);
+
+CREATE INDEX idx_lab_results_abnormal
+    ON lab_results(is_abnormal);
+
+CREATE INDEX idx_diagnoses_icd
+    ON diagnoses(icd_code);
+
+CREATE INDEX idx_diagnoses_patient
+    ON diagnoses(patient_id);
+
+CREATE INDEX idx_vitals_patient
+    ON vitals(patient_id);
+
+CREATE INDEX idx_audit_logs_user
+    ON audit_logs(user_id);
+
+CREATE INDEX idx_audit_logs_timestamp
+    ON audit_logs(timestamp);
+
+CREATE INDEX idx_prescriptions_patient
+    ON prescriptions(patient_id);
+
+-- Full-Text Search Setup
+CREATE FULLTEXT CATALOG pdms_fts_catalog AS DEFAULT;
+
+CREATE FULLTEXT INDEX ON clinical_notes(
+    subjective, objective, assessment, plan
+)
+KEY INDEX PK_clinical_notes
+ON pdms_fts_catalog;
+
+CREATE FULLTEXT INDEX ON diagnoses(description)
+KEY INDEX PK_diagnoses
+ON pdms_fts_catalog;
+
+-- Usage example:
+-- SELECT * FROM clinical_notes
+-- WHERE CONTAINS((subjective, objective), 'chest pain');
+
+---
+
+## 🔐 Security Design
+
+### Authentication
+- JWT tokens (ACCESS_TOKEN_EXPIRE_MINUTES = 30)
+- Refresh token pattern
+- bcrypt password hashing (cost factor = 12)
+- Rate limiting: max 5 failed logins → 15 min lockout
+
+### Authorization
+- RBAC enforced at two levels:
+  1. API layer: require_permission() FastAPI dependency
+  2. Business logic layer: service-level rule checks
+- Permission check: user.role.permissions contains name
+
+### Audit
+- All data modifications captured by SQL Server triggers
+- All VIEW actions captured by application middleware
+- Audit logs are immutable — no UPDATE or DELETE ever
+- Every request logs: user_id, action, ip, timestamp
+
+### Data Integrity
+- All FKs enforced at DB level with FOREIGN KEY constraints
+- NOT NULL constraints on all critical fields
+- UNIQUE constraints on mrn, username, email
+- CHECK constraints on status and enum-like fields
+- ACID transactions in all stored procedures
+- Soft delete pattern using is_removed BIT flag
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+- Framework: React + Next.js (App Router)
+- Styling: Tailwind CSS
+- State: Zustand
+- HTTP: Axios with interceptors
+- Forms: React Hook Form + Zod validation
+- Charts: Recharts (vitals and lab trends)
+
+### Backend
+- Language: Python 3.11+
+- Framework: FastAPI
+- ORM: SQLAlchemy 2.0
+- Migrations: Alembic
+- Validation: Pydantic v2
+- Auth: python-jose (JWT) + passlib (bcrypt)
+- DB Driver: pyodbc + pymssql
+- Cache: redis-py
+- Server: Uvicorn
+- Testing: Pytest
+
+### Database
+- Primary: Microsoft SQL Server
+- Tool: SSMS (SQL Server Management Studio)
+- Cache: Redis 7+
+
+### Deployment (EC2)
+- App server: AWS EC2
+- OS: Windows Server (SQL Server) or Amazon Linux
+- DB: SQL Server on EC2 or Amazon RDS SQL Server
+- Web server: Nginx reverse proxy to Uvicorn
+
+---
+
+## 📦 requirements.txt
+
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+sqlalchemy==2.0.30
+alembic==1.13.1
+pyodbc==5.1.0
+pymssql==2.3.0
+pydantic==2.7.1
+pydantic-settings==2.2.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+redis==5.0.4
+python-dotenv==1.0.1
+python-multipart==0.0.9
+httpx==0.27.0
+pytest==8.2.0
+pytest-asyncio==0.23.7
+
+---
+
+## 🌍 Environment Variables (.env)
+
+# Database — Windows Auth (local development)
+DATABASE_URL=mssql+pyodbc://localhost/pdms_db?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes
+
+# Database — SQL Auth (EC2 production)
+# DATABASE_URL=mssql+pyodbc://sa:YourPassword@your-ec2-ip/pdms_db?driver=ODBC+Driver+17+for+SQL+Server
+
+# Redis
+REDIS_URL=redis://localhost:6379/0
+
+# JWT
+SECRET_KEY=your-minimum-32-character-secret-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# App
+DEBUG=True
+APP_NAME=PDMS
+APP_VERSION=1.0.0
+ALLOWED_ORIGINS=http://localhost:3000
+
+---
+
+## 📁 Backend Project Structure
+
+backend/
+├── app/
+│   ├── core/
+│   │   ├── config.py          # Pydantic BaseSettings
+│   │   ├── database.py        # SQLAlchemy engine + session
+│   │   │                      # mssql+pyodbc connection
+│   │   ├── redis.py           # Redis connection
+│   │   ├── security.py        # JWT + bcrypt helpers
+│   │   └── dependencies.py    # get_db, get_current_user,
+│   │                          # require_permission
+│   ├── middleware/
+│   │   ├── audit.py           # Logs VIEW actions
+│   │   └── error_handler.py   # Global exception handler
+│   ├── models/                # SQLAlchemy ORM models
+│   │   ├── user.py            # UNIQUEIDENTIFIER PKs
+│   │   ├── role.py
+│   │   ├── permission.py
+│   │   ├── patient.py
+│   │   ├── appointment.py
+│   │   ├── encounter.py
+│   │   ├── clinical_note.py
+│   │   ├── diagnosis.py
+│   │   ├── vital.py
+│   │   ├── prescription.py
+│   │   ├── lab_order.py
+│   │   ├── lab_result.py
+│   │   ├── imaging_record.py
+│   │   ├── medical_history.py
+│   │   ├── allergy.py
+│   │   ├── vaccination.py
+│   │   ├── referral.py
+│   │   ├── care_plan.py
+│   │   └── audit_log.py
+│   ├── schemas/               # Pydantic request/response
+│   │   ├── auth.py
+│   │   ├── user.py
+│   │   ├── patient.py
+│   │   ├── appointment.py
+│   │   ├── encounter.py
+│   │   ├── clinical_note.py
+│   │   ├── diagnosis.py
+│   │   ├── vital.py
+│   │   ├── prescription.py
+│   │   ├── lab_order.py
+│   │   ├── lab_result.py
+│   │   ├── imaging_record.py
+│   │   ├── medical_history.py
+│   │   ├── allergy.py
+│   │   ├── vaccination.py
+│   │   ├── referral.py
+│   │   ├── care_plan.py
+│   │   └── audit_log.py
+│   ├── repositories/          # DB query logic
+│   │   ├── base.py            # Generic CRUD base
+│   │   ├── user_repository.py
+│   │   ├── patient_repository.py
+│   │   ├── appointment_repository.py
+│   │   ├── encounter_repository.py
+│   │   ├── clinical_note_repository.py
+│   │   ├── diagnosis_repository.py
+│   │   ├── vital_repository.py
+│   │   ├── prescription_repository.py
+│   │   ├── lab_order_repository.py
+│   │   ├── lab_result_repository.py
+│   │   ├── imaging_record_repository.py
+│   │   ├── medical_history_repository.py
+│   │   ├── allergy_repository.py
+│   │   ├── vaccination_repository.py
+│   │   ├── referral_repository.py
+│   │   ├── care_plan_repository.py
+│   │   └── audit_log_repository.py
+│   ├── services/              # Business logic layer
+│   │   ├── auth_service.py
+│   │   ├── user_service.py
+│   │   ├── patient_service.py      # MRN generation
+│   │   ├── appointment_service.py
+│   │   ├── encounter_service.py    # calls usp_create_encounter
+│   │   ├── clinical_note_service.py
+│   │   ├── diagnosis_service.py
+│   │   ├── vital_service.py
+│   │   ├── prescription_service.py # calls usp_record_prescription
+│   │   ├── lab_order_service.py
+│   │   ├── lab_result_service.py
+│   │   ├── imaging_record_service.py
+│   │   ├── medical_history_service.py
+│   │   ├── allergy_service.py
+│   │   ├── vaccination_service.py
+│   │   ├── referral_service.py
+│   │   └── care_plan_service.py
+│   ├── routers/               # FastAPI route definitions
+│   │   ├── auth.py
+│   │   ├── users.py
+│   │   ├── patients.py
+│   │   ├── appointments.py
+│   │   ├── encounters.py
+│   │   ├── clinical_notes.py
+│   │   ├── diagnoses.py
+│   │   ├── vitals.py
+│   │   ├── prescriptions.py
+│   │   ├── lab_orders.py
+│   │   ├── lab_results.py
+│   │   ├── imaging_records.py
+│   │   ├── medical_history.py
+│   │   ├── allergies.py
+│   │   ├── vaccinations.py
+│   │   ├── referrals.py
+│   │   ├── care_plans.py
+│   │   └── audit_logs.py
+│   ├── utils/
+│   │   ├── mrn_generator.py   # PDMS-YYYY-NNNNN format
+│   │   ├── pagination.py
+│   │   └── response.py        # Standard API response
+│   └── main.py                # App setup + router registration
+├── database/
+│   ├── migrations/            # T-SQL migration scripts
+│   │   ├── 001_create_roles.sql
+│   │   ├── 002_create_permissions.sql
+│   │   ├── 003_create_role_permissions.sql
+│   │   ├── 004_create_users.sql
+│   │   ├── 005_create_patients.sql
+│   │   ├── 006_create_medical_history.sql
+│   │   ├── 007_create_allergies.sql
+│   │   ├── 008_create_vaccinations.sql
+│   │   ├── 009_create_appointments.sql
+│   │   ├── 010_create_encounters.sql
+│   │   ├── 011_create_clinical_notes.sql
+│   │   ├── 012_create_diagnoses.sql
+│   │   ├── 013_create_vitals.sql
+│   │   ├── 014_create_prescriptions.sql
+│   │   ├── 015_create_lab_orders.sql
+│   │   ├── 016_create_lab_results.sql
+│   │   ├── 017_create_imaging_records.sql
+│   │   ├── 018_create_referrals.sql
+│   │   ├── 019_create_care_plans.sql
+│   │   └── 020_create_audit_logs.sql
+│   ├── procedures/
+│   │   ├── usp_create_encounter.sql
+│   │   └── usp_record_prescription.sql
+│   ├── triggers/
+│   │   ├── trg_audit_all_tables.sql
+│   │   ├── trg_calculate_bmi.sql
+│   │   └── trg_flag_abnormal_vitals.sql
+│   ├── indexes/
+│   │   └── performance_indexes.sql
+│   └── seeds/
+│       ├── 001_seed_roles.sql
+│       ├── 002_seed_permissions.sql
+│       ├── 003_seed_role_permissions.sql
+│       ├── 004_seed_demo_users.sql
+│       └── 005_seed_demo_patients.sql
+├── alembic/
+│   ├── versions/
+│   └── env.py
+├── tests/
+│   ├── conftest.py
+│   ├── test_auth.py
+│   ├── test_patients.py
+│   ├── test_encounters.py
+│   ├── test_prescriptions.py
+│   └── test_labs.py
+├── .env
+├── .env.example
+├── requirements.txt
+└── Dockerfile
+
+---
+
+## 📁 Frontend Project Structure
+
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── layout.jsx
+│   │   ├── page.jsx
+│   │   ├── (auth)/login/page.jsx
+│   │   ├── dashboard/page.jsx
+│   │   ├── patients/
+│   │   │   ├── page.jsx
+│   │   │   ├── new/page.jsx
+│   │   │   └── [id]/
+│   │   │       ├── page.jsx
+│   │   │       ├── encounters/
+│   │   │       │   ├── page.jsx
+│   │   │       │   └── [encId]/page.jsx
+│   │   │       ├── vitals/page.jsx
+│   │   │       ├── labs/page.jsx
+│   │   │       ├── history/page.jsx
+│   │   │       ├── allergies/page.jsx
+│   │   │       ├── prescriptions/page.jsx
+│   │   │       ├── vaccinations/page.jsx
+│   │   │       ├── care-plans/page.jsx
+│   │   │       └── referrals/page.jsx
+│   │   ├── appointments/
+│   │   │   ├── page.jsx
+│   │   │   └── new/page.jsx
+│   │   ├── lab/
+│   │   │   ├── orders/page.jsx
+│   │   │   └── results/page.jsx
+│   │   ├── admin/
+│   │   │   ├── users/page.jsx
+│   │   │   ├── roles/page.jsx
+│   │   │   └── audit-logs/page.jsx
+│   │   └── portal/page.jsx
+│   ├── components/
+│   │   ├── layout/
+│   │   │   ├── Sidebar.jsx
+│   │   │   ├── Header.jsx
+│   │   │   └── PageWrapper.jsx
+│   │   ├── ui/
+│   │   │   ├── Button.jsx
+│   │   │   ├── Input.jsx
+│   │   │   ├── Modal.jsx
+│   │   │   ├── Table.jsx
+│   │   │   ├── Badge.jsx
+│   │   │   ├── Card.jsx
+│   │   │   └── Alert.jsx
+│   │   ├── patients/
+│   │   │   ├── PatientCard.jsx
+│   │   │   ├── PatientSearchBar.jsx
+│   │   │   └── PatientRegistrationForm.jsx
+│   │   ├── encounters/
+│   │   │   ├── EncounterCard.jsx
+│   │   │   ├── SOAPNoteForm.jsx
+│   │   │   └── VitalsForm.jsx
+│   │   ├── charts/
+│   │   │   ├── VitalsTrendChart.jsx
+│   │   │   └── LabTrendChart.jsx
+│   │   ├── lab/
+│   │   │   ├── LabOrderForm.jsx
+│   │   │   └── LabResultCard.jsx
+│   │   └── auth/
+│   │       └── ProtectedRoute.jsx
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   ├── usePatients.js
+│   │   ├── useEncounters.js
+│   │   └── usePagination.js
+│   ├── services/
+│   │   ├── api.js
+│   │   ├── authService.js
+│   │   ├── patientService.js
+│   │   ├── encounterService.js
+│   │   ├── labService.js
+│   │   └── appointmentService.js
+│   ├── store/
+│   │   ├── authStore.js
+│   │   └── patientStore.js
+│   └── utils/
+│       ├── formatDate.js
+│       ├── formatMRN.js
+│       └── rolePermissions.js
+├── next.config.js
+├── tailwind.config.js
+└── package.json
+
+---
+
+## 🌐 API Endpoints
+
+### Auth
+POST   /api/auth/login
+POST   /api/auth/logout
+POST   /api/auth/refresh
+
+### Users (Admin only)
+GET    /api/users
+POST   /api/users
+GET    /api/users/{id}
+PUT    /api/users/{id}
+PATCH  /api/users/{id}/deactivate
+
+### Patients
+GET    /api/patients
+POST   /api/patients
+GET    /api/patients/{id}
+GET    /api/patients/{id}/summary
+PUT    /api/patients/{id}
+
+### Appointments
+GET    /api/appointments
+POST   /api/appointments
+PUT    /api/appointments/{id}
+PATCH  /api/appointments/{id}/cancel
+
+### Encounters
+POST   /api/encounters
+GET    /api/encounters/{id}
+GET    /api/encounters/patient/{id}
+PATCH  /api/encounters/{id}/close
+
+### Clinical Notes
+POST   /api/clinical-notes
+GET    /api/clinical-notes/{id}
+PUT    /api/clinical-notes/{id}
+
+### Diagnoses
+POST   /api/diagnoses
+GET    /api/diagnoses/patient/{id}
+GET    /api/diagnoses/encounter/{id}
+
+### Vitals
+POST   /api/vitals
+GET    /api/vitals/patient/{id}
+GET    /api/vitals/encounter/{id}
+
+### Prescriptions
+POST   /api/prescriptions
+GET    /api/prescriptions/patient/{id}
+GET    /api/prescriptions/encounter/{id}
+
+### Lab Orders
+POST   /api/lab-orders
+GET    /api/lab-orders/pending
+GET    /api/lab-orders/patient/{id}
+PATCH  /api/lab-orders/{id}/status
+
+### Lab Results
+POST   /api/lab-results
+GET    /api/lab-results/order/{id}
+GET    /api/lab-results/patient/{id}
+
+### Imaging
+POST   /api/imaging
+GET    /api/imaging/patient/{id}
+
+### Medical History
+POST   /api/medical-history
+GET    /api/medical-history/patient/{id}
+PUT    /api/medical-history/{id}
+
+### Allergies
+POST   /api/allergies
+GET    /api/allergies/patient/{id}
+PATCH  /api/allergies/{id}/remove  (soft delete)
+
+### Vaccinations
+POST   /api/vaccinations
+GET    /api/vaccinations/patient/{id}
+
+### Referrals
+POST   /api/referrals
+GET    /api/referrals/patient/{id}
+PATCH  /api/referrals/{id}/status
+
+### Care Plans
+POST   /api/care-plans
+GET    /api/care-plans/patient/{id}
+PUT    /api/care-plans/{id}
+PATCH  /api/care-plans/{id}/status
+
+### Audit Logs (Admin only)
+GET    /api/audit-logs
+
+---
+
+## 🔑 Business Rules (enforce in service layer)
+
+1.  Prescription CANNOT be issued on a closed encounter
+2.  Prescription BLOCKED if patient has matching allergy
+3.  Lab result CANNOT be uploaded without matching order
+4.  Encounter CANNOT be created for cancelled appointment
+5.  Only ordering doctor can close an encounter
+6.  Patient MRN unique — format PDMS-YYYY-NNNNN
+7.  Audit logs NEVER deleted or modified
+8.  User can only have ONE role at a time
+9.  Vitals MUST link to an open encounter
+10. Lab order status forward only:
+    ordered → in-progress → completed
+11. Soft delete for allergies and prescriptions
+    use is_removed = 1, never hard DELETE
+12. is_chronic = 1 means condition has no end date
+13. BMI auto-calculated by trg_calculate_bmi trigger
+14. Vitals is_abnormal auto-set by trigger on insert
+15. visit_number auto-incremented per patient
+    calculated in usp_create_encounter
+
+---
+
+## 🌱 Demo Seed Data
+
+### Demo Users
+admin@pdms.com      / Admin123!    → system_admin
+doctor@pdms.com     / Doctor123!   → doctor
+nurse@pdms.com      / Nurse123!    → nurse
+reception@pdms.com  / Recept123!   → receptionist
+lab@pdms.com        / Lab1234!     → lab_technician
+patient@pdms.com    / Patient123!  → patient
+
+### Demo Patient 1 — Acute Visit
+Name: John Smith
+MRN: PDMS-2026-00001
+Age: 34
+Allergies: None
+Chronic conditions: None
+Encounter: Upper respiratory infection
+Diagnosis: J06.9
+Prescription: Amoxicillin 500mg 3x daily 7 days
+Lab: CBC ordered and resulted (normal)
+
+### Demo Patient 2 — Chronic Patient
+Name: Sarah Johnson
+MRN: PDMS-2026-00002
+Age: 52
+Allergy: NSAIDs (moderate severity)
+Chronic: Type 2 Diabetes (is_chronic = 1)
+Past encounters: 4 over 12 months
+HbA1c trend:
+  Visit 1: 8.4% (abnormal)
+  Visit 2: 7.8% (abnormal)
+  Visit 3: 7.1% (borderline)
+  Visit 4: 6.9% (normal)
+Weight trend: 98kg → 94kg → 91kg → 89kg
+Active prescriptions:
+  Metformin 1000mg twice daily
+  Lisinopril 5mg daily
+Active care plan: Diabetes Management
+Referral: Nephrology (completed)
+
+---
+
+## 🚀 Implementation Order
+
+### Phase 1 — Database (Week 1)
+Run all scripts in SSMS in this exact order:
+1.  001 to 020 migration scripts (create all tables)
+2.  usp_create_encounter.sql
+3.  usp_record_prescription.sql
+4.  trg_audit_all_tables.sql
+5.  trg_calculate_bmi.sql
+6.  trg_flag_abnormal_vitals.sql
+7.  performance_indexes.sql
+8.  001 to 005 seed scripts
+
+### Phase 2 — Backend Foundation (Week 1-2)
+9.  FastAPI project setup
+10. config.py with SQL Server connection string
+11. database.py with mssql+pyodbc engine
+12. security.py (JWT + bcrypt)
+13. dependencies.py (get_db, get_current_user,
+    require_permission)
+14. error_handler middleware
+15. audit middleware
+
+### Phase 3 — Auth & Users (Week 2)
+16. Auth router and service
+17. Users router, service, repository
+18. Roles and permissions router
+
+### Phase 4 — Patient Core (Week 2-3)
+19. Patients module
+20. Appointments module
+21. Medical history module
+22. Allergies module
+
+### Phase 5 — Clinical Workflows (Week 3-4)
+23. Encounters module (calls usp_create_encounter)
+24. Clinical notes module
+25. Diagnoses module
+26. Vitals module
+27. Prescriptions module (calls usp_record_prescription)
+
+### Phase 6 — Diagnostics (Week 4-5)
+28. Lab orders module
+29. Lab results module
+30. Imaging records module
+31. Vaccinations module
+32. Referrals module
+33. Care plans module
+
+### Phase 7 — Admin (Week 5)
+34. Audit logs module
+35. Admin dashboard endpoints
+
+### Phase 8 — Frontend (Week 6-7)
+36. Login page and auth flow
+37. Role-based dashboard
+38. Patient search and registration
+39. Patient profile (all tabs)
+40. Encounter create and SOAP form
+41. Vitals form + trend chart
+42. Lab order form + results upload
+43. Lab trend chart
+44. Admin panel
+
+### Phase 9 — Polish and Demo (Week 8)
+45. Seed demo patients with realistic data
+46. Test allergy block scenario end to end
+47. Test abnormal lab flag scenario
+48. Test RBAC for each role
+49. Prepare demo script:
+    Demo 1: Acute patient visit (5 min)
+    Demo 2: Chronic patient follow-up (5 min)
+50. Final report and documentation

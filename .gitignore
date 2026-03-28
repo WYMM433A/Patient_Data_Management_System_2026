@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+backend/venv/
+backend/.venv/
+venv/
+.venv/
+
+# Environment variables — NEVER commit secrets
+backend/.env
+.env
+
+# SQLAlchemy / Alembic
+*.db
+*.sqlite3
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Logs
+*.log
+uvicorn.log
+
+# Node (frontend, when added)
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-error.log*
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/

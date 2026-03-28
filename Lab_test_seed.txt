@@ -1,0 +1,157 @@
+-- Insert test types
+INSERT INTO lab_test_templates
+    (template_id, test_name, test_code, test_category)
+VALUES
+(NEWID(), 'Complete Blood Count',           'CBC',    'hematology'),
+(NEWID(), 'Basic Metabolic Panel',          'BMP',    'biochemistry'),
+(NEWID(), 'Electrolytes Urea Creatinine',   'EUCr',   'biochemistry'),
+(NEWID(), 'Lipid Profile',                  'LIPID',  'biochemistry'),
+(NEWID(), 'Liver Function Test',            'LFT',    'biochemistry'),
+(NEWID(), 'Thyroid Function Test',          'TFT',    'biochemistry'),
+(NEWID(), 'Hemoglobin A1c',                 'HbA1c',  'biochemistry'),
+(NEWID(), 'Urinalysis',                     'UA',     'urinalysis'),
+(NEWID(), 'Rapid Streptococcal Antigen',    'STREP',  'serology'),
+(NEWID(), 'COVID-19 Rapid Antigen',         'COVID',  'serology'),
+(NEWID(), 'Rapid Influenza Antigen',        'FLU',    'serology');
+
+
+-- CBC Parameters
+DECLARE @cbc_id UNIQUEIDENTIFIER = (
+    SELECT template_id FROM lab_test_templates
+    WHERE test_code = 'CBC');
+
+INSERT INTO lab_test_parameters
+    (template_id, parameter_name, display_order,
+     unit, normal_range_min, normal_range_max,
+     normal_range_text, value_type)
+VALUES
+(@cbc_id, 'Hemoglobin',         1, 'g/dL',    12.0,  17.5,  NULL,      'numeric'),
+(@cbc_id, 'PCV (Hematocrit)',    2, '%',        37.0,  47.0,  NULL,      'numeric'),
+(@cbc_id, 'MCV',                3, 'fL',        80.0,  100.0, NULL,      'numeric'),
+(@cbc_id, 'MCH',                4, 'pg',        27.0,  33.0,  NULL,      'numeric'),
+(@cbc_id, 'MCHC',               5, 'g/dL',      32.0,  36.0,  NULL,      'numeric'),
+(@cbc_id, 'White Blood Cells',  6, 'x10⁹/L',    4.5,   11.0,  NULL,      'numeric'),
+(@cbc_id, 'Platelets',          7, 'x10⁹/L',    150.0, 400.0, NULL,      'numeric'),
+(@cbc_id, 'Neutrophils',        8, '%',          50.0,  70.0,  NULL,      'numeric'),
+(@cbc_id, 'Lymphocytes',        9, '%',          20.0,  40.0,  NULL,      'numeric'),
+(@cbc_id, 'Monocytes',         10, '%',           2.0,   8.0,  NULL,      'numeric');
+
+-- EUCr Parameters
+DECLARE @eucr_id UNIQUEIDENTIFIER = (
+    SELECT template_id FROM lab_test_templates
+    WHERE test_code = 'EUCr');
+
+INSERT INTO lab_test_parameters
+    (template_id, parameter_name, display_order,
+     unit, normal_range_min, normal_range_max,
+     normal_range_text, value_type)
+VALUES
+(@eucr_id, 'Sodium (Na+)',          1, 'mEq/L',   136.0, 145.0, NULL, 'numeric'),
+(@eucr_id, 'Potassium (K+)',         2, 'mEq/L',     3.5,   5.0, NULL, 'numeric'),
+(@eucr_id, 'Chlorine (Cl-)',         3, 'mEq/L',    98.0, 107.0, NULL, 'numeric'),
+(@eucr_id, 'Bicarbonate (HCO3-)',    4, 'mEq/L',    22.0,  29.0, NULL, 'numeric'),
+(@eucr_id, 'Urea',                   5, 'mmol/L',    2.5,   7.1, NULL, 'numeric'),
+(@eucr_id, 'Creatinine',             6, 'µmol/L',   62.0, 106.0, NULL, 'numeric'),
+(@eucr_id, 'eGFR',                   7, 'mL/min',   60.0,  NULL, 'Above 60', 'numeric');
+
+-- HbA1c Parameters
+DECLARE @hba1c_id UNIQUEIDENTIFIER = (
+    SELECT template_id FROM lab_test_templates
+    WHERE test_code = 'HbA1c');
+
+INSERT INTO lab_test_parameters
+    (template_id, parameter_name, display_order,
+     unit, normal_range_min, normal_range_max,
+     normal_range_text, value_type)
+VALUES
+(@hba1c_id, 'HbA1c', 1, '%', NULL, 5.7, 'Below 5.7', 'numeric');
+
+-- Rapid Strep Parameters
+DECLARE @strep_id UNIQUEIDENTIFIER = (
+    SELECT template_id FROM lab_test_templates
+    WHERE test_code = 'STREP');
+
+INSERT INTO lab_test_parameters
+    (template_id, parameter_name, display_order,
+     unit, normal_range_text, value_type)
+VALUES
+(@strep_id, 'Strep A Antigen', 1, '-', 'Negative', 'positive_negative');
+
+-- COVID Parameters
+DECLARE @covid_id UNIQUEIDENTIFIER = (
+    SELECT template_id FROM lab_test_templates
+    WHERE test_code = 'COVID');
+
+INSERT INTO lab_test_parameters
+    (template_id, parameter_name, display_order,
+     unit, normal_range_text, value_type)
+VALUES
+(@covid_id, 'COVID-19 Antigen', 1, '-', 'Negative', 'positive_negative');
+
+-- Influenza Parameters
+DECLARE @flu_id UNIQUEIDENTIFIER = (
+    SELECT template_id FROM lab_test_templates
+    WHERE test_code = 'FLU');
+
+INSERT INTO lab_test_parameters
+    (template_id, parameter_name, display_order,
+     unit, normal_range_text, value_type)
+VALUES
+(@flu_id, 'Influenza A', 1, '-', 'Negative', 'positive_negative'),
+(@flu_id, 'Influenza B', 2, '-', 'Negative', 'positive_negative');
+```
+
+---
+
+## 🔄 Updated Flow With Templates
+```
+Doctor orders CBC for Jane Smith
+          ↓
+LAB_ORDERS record created
+test_code = CBC
+          ↓
+Lab tech opens pending order
+          ↓
+Backend fetches template parameters:
+SELECT * FROM lab_test_parameters
+WHERE template_id = (CBC template id)
+ORDER BY display_order
+          ↓
+Frontend renders form dynamically:
+┌─────────────────────────────────┐
+│ CBC - Jane Smith                │
+├─────────────────────────────────┤
+│ Hemoglobin      [      ] g/dL   │
+│ PCV Hematocrit  [      ] %      │
+│ MCV             [      ] fL     │
+│ MCH             [      ] pg     │
+│ MCHC            [      ] g/dL   │
+│ White Blood Cells[     ] x10⁹   │
+│ Platelets       [      ] x10⁹   │
+│ Neutrophils     [      ] %      │
+│ Lymphocytes     [      ] %      │
+│ Monocytes       [      ] %      │
+├─────────────────────────────────┤
+│ Notes: [                      ] │
+│              [Submit Results]   │
+└─────────────────────────────────┘
+          ↓
+Lab tech fills values and submits
+          ↓
+Backend creates 10 LAB_RESULT records
+One per parameter automatically
+Compares each value against normal range
+Sets is_abnormal = 1 where needed
+Updates LAB_ORDER status = completed
+```
+
+---
+
+## 📋 Updated Entity List
+
+Your system now has **22 entities** instead of 20:
+```
+Original 20 entities          +    2 new entities
+──────────────────────────────────────────────────
+All previous entities              LAB_TEST_TEMPLATES
+                                   LAB_TEST_PARAMETERS
