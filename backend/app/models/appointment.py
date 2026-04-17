@@ -16,6 +16,7 @@ class Appointment(Base):
     reason         = Column(String,           nullable=True)
     status         = Column(String(20),       nullable=False, default="scheduled")
     notes          = Column(String,           nullable=True)
+    checked_at     = Column(DateTime,         nullable=True)
     created_by     = Column(UNIQUEIDENTIFIER, ForeignKey("users.user_id"),       nullable=False)
     created_at     = Column(DateTime,         nullable=False, server_default=func.getdate())
 

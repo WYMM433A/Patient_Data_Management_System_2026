@@ -61,3 +61,12 @@ def cancel_appointment(
     _=Depends(require_permission("cancel_appointment")),
 ):
     return appointment_service.cancel_appointment(db, appointment_id)
+
+
+@router.post("/{appointment_id}/check-in", response_model=AppointmentOut)
+def check_in(
+    appointment_id: UUID,
+    db: Session = Depends(get_db),
+    _=Depends(require_permission("book_appointment")),
+):
+    return appointment_service.check_in(db, appointment_id)

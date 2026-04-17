@@ -18,8 +18,9 @@ BEGIN
         reason         NVARCHAR(MAX),
         status         NVARCHAR(20)      NOT NULL DEFAULT 'scheduled'
                            CONSTRAINT CHK_appt_status
-                               CHECK (status IN ('scheduled', 'confirmed', 'completed', 'cancelled')),
+                               CHECK (status IN ('scheduled', 'confirmed', 'checked_in', 'completed', 'cancelled')),
         notes          NVARCHAR(MAX),
+        checked_at     DATETIME2,
         created_by     UNIQUEIDENTIFIER  NOT NULL,
         created_at     DATETIME2         NOT NULL DEFAULT GETDATE(),
         CONSTRAINT FK_appt_patient    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),

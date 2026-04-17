@@ -42,7 +42,7 @@ def _check_conflict(db: Session, doctor_id: UUID, scheduled_at: datetime, exclud
         db.query(Appointment)
         .filter(
             Appointment.doctor_id    == str(doctor_id),
-            Appointment.status.in_(["scheduled", "confirmed"]),
+            Appointment.status.in_(["scheduled", "confirmed", "checked_in"]),
             Appointment.scheduled_at >  window_start,
             Appointment.scheduled_at <  window_end,
         )
@@ -140,6 +140,22 @@ def cancel_appointment(db: Session, appointment_id: UUID) -> Appointment:
         )
 
     appt.status = "cancelled"
+    db.commit()
+    db.refresh(appt)
+    return appt
+
+
+def check_in(db: Session, appointment_id: UUID) -> Appointment:
+    appt = _get_or_404(db, appointment_id)
+
+    if appt.status not in ("scheduled", "confirmed"):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot check in an appointment with status '{appt.status}'",
+        )
+
+    appt.status     = "checked_in"
+    appt.checked_at = datetime.utcnow()
     db.commit()
     db.refresh(appt)
     return appt

@@ -26,7 +26,7 @@ class AppointmentUpdate(BaseModel):
     @field_validator("status")
     @classmethod
     def validate_status(cls, v):
-        allowed = {"scheduled", "confirmed", "completed", "cancelled"}
+        allowed = {"scheduled", "confirmed", "checked_in", "completed", "cancelled"}
         if v is not None and v not in allowed:
             raise ValueError(f"status must be one of {allowed}")
         return v
@@ -40,6 +40,7 @@ class AppointmentOut(BaseModel):
     reason:         Optional[str] = None
     status:         str
     notes:          Optional[str] = None
+    checked_at:     Optional[datetime] = None
     created_by:     UUID
     created_at:     datetime
 

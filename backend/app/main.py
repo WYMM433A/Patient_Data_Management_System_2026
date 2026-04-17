@@ -4,7 +4,7 @@ from sqlalchemy import text
 
 from app.database import get_db
 from app.config import settings
-from app.routers import auth, users, patients, appointments
+from app.routers import auth, users, patients, prescriptions, appointments, encounters, lab, imaging, referrals, care_plans, audit_logs
 
 app = FastAPI(
     title="PDMS - Patient Data Management System",
@@ -16,6 +16,13 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(patients.router)
 app.include_router(appointments.router)
+app.include_router(encounters.router)
+app.include_router(prescriptions.router)
+app.include_router(lab.router)
+app.include_router(imaging.router)
+app.include_router(referrals.router)
+app.include_router(care_plans.router)
+app.include_router(audit_logs.router)
 
 
 @app.get("/health")
