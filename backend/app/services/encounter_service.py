@@ -8,6 +8,7 @@ from fastapi import HTTPException, status
 
 
 from app.models.encounter import Encounter, ClinicalNote, Diagnosis, Vital
+from app.models.appointment import Appointment
 from app.schemas.encounters import (
     EncounterCreate,
     SOAPNoteUpdate,
@@ -43,13 +44,29 @@ def _assert_open(enc: Encounter) -> None:
 def create_encounter(db: Session, payload: EncounterCreate, created_by: UUID) -> Encounter:
     """
     Delegates to usp_create_encounter (ACID stored procedure).
-    The proc atomically:
-      - inserts the encounter row
-      - increments visit_number
-      - marks the linked appointment as 'completed'
-      - inserts an empty SOAP note shell
-      - writes an audit log entry
+    Validates that the appointment exists, belongs to the same patient,
+    and is in 'checked_in' status before proceeding.
     """
+    # --- Guard: appointment must exist, belong to this patient, and be checked_in ---
+    appt = db.query(Appointment).filter(
+        Appointment.appointment_id == str(payload.appointment_id)
+    ).first()
+    if not appt:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Appointment not found",
+        )
+    if str(appt.patient_id) != str(payload.patient_id):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Appointment does not belong to this patient",
+        )
+    if appt.status != "checked_in":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Appointment must be in 'checked_in' status to start an encounter (current: {appt.status})",
+        )
+    # --- Delegate to stored procedure ---
     sql = text("""
         DECLARE @new_id UNIQUEIDENTIFIER;
         EXEC usp_create_encounter
@@ -118,6 +135,15 @@ def close_encounter(db: Session, encounter_id: UUID) -> Encounter:
     _assert_open(enc)
     enc.status    = "closed"
     enc.closed_at = datetime.utcnow()
+
+    # Mark the linked appointment as completed (if any)
+    if enc.appointment_id:
+        appt = db.query(Appointment).filter(
+            Appointment.appointment_id == str(enc.appointment_id)
+        ).first()
+        if appt and appt.status not in ("cancelled", "completed"):
+            appt.status = "completed"
+
     db.commit()
     db.refresh(enc)
     return enc
@@ -170,6 +196,21 @@ def add_vitals(
     enc = _get_encounter_or_404(db, encounter_id)
     _assert_open(enc)
 
+    # Pre-calculate BMI so trg_calculate_bmi has nothing to update
+    bmi = None
+    if payload.weight_kg and payload.height_cm and payload.height_cm > 0:
+        bmi = round(payload.weight_kg / (payload.height_cm / 100.0) ** 2, 2)
+
+    # Pre-calculate abnormal flag so trg_flag_abnormal_vitals has nothing to update
+    is_abnormal = bool(
+        (payload.heart_rate         is not None and (payload.heart_rate > 100 or payload.heart_rate < 60)) or
+        (payload.blood_pressure_sys is not None and (payload.blood_pressure_sys > 140 or payload.blood_pressure_sys < 90)) or
+        (payload.blood_pressure_dia is not None and payload.blood_pressure_dia > 90) or
+        (payload.oxygen_saturation  is not None and payload.oxygen_saturation < 95) or
+        (payload.temperature        is not None and (payload.temperature > 37.5 or payload.temperature < 36.0)) or
+        (payload.respiratory_rate   is not None and (payload.respiratory_rate > 20 or payload.respiratory_rate < 12))
+    )
+
     vital = Vital(
         patient_id         = str(enc.patient_id),
         encounter_id       = str(encounter_id),
@@ -183,6 +224,8 @@ def add_vitals(
         oxygen_saturation  = payload.oxygen_saturation,
         respiratory_rate   = payload.respiratory_rate,
         event_date         = payload.event_date,
+        bmi                = bmi,
+        is_abnormal        = is_abnormal,
     )
     db.add(vital)
     db.commit()

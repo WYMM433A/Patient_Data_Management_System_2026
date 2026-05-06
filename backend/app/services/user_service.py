@@ -30,6 +30,17 @@ def list_users(db: Session, skip: int = 0, limit: int = 50) -> List[User]:
     )
 
 
+def list_doctors(db: Session) -> List[User]:
+    return (
+        db.query(User)
+        .join(User.role)
+        .options(joinedload(User.role))
+        .filter(Role.role_name == "doctor", User.is_active == True)
+        .order_by(User.first_name)
+        .all()
+    )
+
+
 def get_user(db: Session, user_id: UUID) -> User:
     user = (
         db.query(User)
@@ -89,6 +100,8 @@ def update_user(db: Session, user_id: UUID, payload: UserUpdate) -> User:
         user.last_name = payload.last_name
     if payload.is_active is not None:
         user.is_active = payload.is_active
+    if payload.password:
+        user.password_hash = hash_password(payload.password)
 
     db.commit()
     db.refresh(user)

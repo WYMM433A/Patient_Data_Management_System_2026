@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 from fastapi import HTTPException, status
 
 from app.models.appointment import Appointment
@@ -90,7 +91,10 @@ def list_appointments(
     skip:  int = 0,
     limit: int = 50,
 ) -> List[Appointment]:
-    q = db.query(Appointment)
+    q = db.query(Appointment).options(
+        joinedload(Appointment.patient),
+        joinedload(Appointment.doctor),
+    )
 
     if patient_id:
         q = q.filter(Appointment.patient_id == str(patient_id))
@@ -106,7 +110,7 @@ def list_appointments(
     if appt_status:
         q = q.filter(Appointment.status == appt_status)
 
-    return q.order_by(Appointment.scheduled_at).offset(skip).limit(limit).all()
+    return q.order_by(Appointment.scheduled_at.desc()).offset(skip).limit(limit).all()
 
 
 def get_appointment(db: Session, appointment_id: UUID) -> Appointment:

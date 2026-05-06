@@ -139,7 +139,8 @@ CREATE PROCEDURE usp_record_prescription
     @p_duration        NVARCHAR(50),
     @p_route           NVARCHAR(30),
     @p_instructions    NVARCHAR(MAX),
-    @p_prescription_id UNIQUEIDENTIFIER OUTPUT
+    @p_prescription_id UNIQUEIDENTIFIER OUTPUT,
+    @p_force_override  BIT = 0
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -158,7 +159,8 @@ BEGIN
         END
 
         -- Step 2: Check patient allergies (exact case-insensitive match)
-        IF EXISTS (
+        -- Skipped when @p_force_override = 1 (doctor explicitly overrides after warning)
+        IF @p_force_override = 0 AND EXISTS (
             SELECT 1 FROM allergies
             WHERE patient_id = @p_patient_id
               AND is_removed  = 0

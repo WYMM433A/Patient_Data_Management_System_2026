@@ -62,7 +62,7 @@ def list_patients(
                 Patient.phone.ilike(term),
             )
         )
-    return q.order_by(Patient.last_name, Patient.first_name).offset(skip).limit(limit).all()
+    return q.order_by(Patient.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def get_patient(db: Session, patient_id: UUID) -> Patient:

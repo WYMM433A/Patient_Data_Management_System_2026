@@ -40,7 +40,7 @@ def list_imaging_by_encounter(
     skip:  int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("record_imaging")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return imaging_service.list_imaging(
         db,
@@ -62,7 +62,7 @@ def list_imaging(
     skip:  int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("record_imaging")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return imaging_service.list_imaging(
         db,

@@ -30,16 +30,17 @@ def list_appointments(
     skip:  int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("book_appointment")),
+    _=Depends(require_permission("view_patient_record")),
 ):
-    return appointment_service.list_appointments(db, patient_id, doctor_id, date, appt_status, skip, limit)
+    appts = appointment_service.list_appointments(db, patient_id, doctor_id, date, appt_status, skip, limit)
+    return [AppointmentOut.from_orm_with_names(a) for a in appts]
 
 
 @router.get("/{appointment_id}", response_model=AppointmentOut)
 def get_appointment(
     appointment_id: UUID,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("book_appointment")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return appointment_service.get_appointment(db, appointment_id)
 

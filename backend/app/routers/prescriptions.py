@@ -40,7 +40,7 @@ def list_prescriptions_by_encounter(
     skip:  int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("issue_prescription")),
+    _=Depends(require_permission("view_prescriptions")),
 ):
     return prescription_service.list_prescriptions(
         db, encounter_id=encounter_id, active_only=active_only, skip=skip, limit=limit
@@ -61,7 +61,7 @@ def list_prescriptions(
     skip:  int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("issue_prescription")),
+    _=Depends(require_permission("view_prescriptions")),
 ):
     return prescription_service.list_prescriptions(
         db, patient_id=patient_id, active_only=active_only, skip=skip, limit=limit
@@ -75,7 +75,7 @@ def list_prescriptions(
 def get_prescription(
     prescription_id: UUID,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("issue_prescription")),
+    _=Depends(require_permission("view_prescriptions")),
 ):
     return prescription_service.get_prescription(db, prescription_id)
 

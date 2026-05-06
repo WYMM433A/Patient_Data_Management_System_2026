@@ -40,7 +40,7 @@ def list_referrals_by_encounter(
     skip:  int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("create_referral")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return referral_service.list_referrals(
         db, encounter_id=encounter_id, ref_status=ref_status, skip=skip, limit=limit
@@ -58,7 +58,7 @@ def list_referrals(
     skip:  int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("create_referral")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return referral_service.list_referrals(
         db, patient_id=patient_id, ref_status=ref_status, skip=skip, limit=limit
@@ -69,7 +69,7 @@ def list_referrals(
 def get_referral(
     referral_id: UUID,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("create_referral")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return referral_service.get_referral(db, referral_id)
 

@@ -36,6 +36,8 @@ class AppointmentOut(BaseModel):
     appointment_id: UUID
     patient_id:     UUID
     doctor_id:      UUID
+    patient_name:   Optional[str] = None
+    doctor_name:    Optional[str] = None
     scheduled_at:   datetime
     reason:         Optional[str] = None
     status:         str
@@ -43,5 +45,14 @@ class AppointmentOut(BaseModel):
     checked_at:     Optional[datetime] = None
     created_by:     UUID
     created_at:     datetime
+
+    @classmethod
+    def from_orm_with_names(cls, appt) -> "AppointmentOut":
+        obj = cls.model_validate(appt)
+        if appt.patient:
+            obj.patient_name = f"{appt.patient.first_name} {appt.patient.last_name}"
+        if appt.doctor:
+            obj.doctor_name = f"{appt.doctor.first_name} {appt.doctor.last_name}"
+        return obj
 
     model_config = {"from_attributes": True}

@@ -438,6 +438,8 @@ AFTER INSERT, UPDATE
 AS
 BEGIN
     SET NOCOUNT ON;
+    -- Clear session context so cascaded audit rows are attributed to System
+    EXEC sys.sp_set_session_context @key=N'user_id', @value=NULL;
 
     UPDATE v
     SET bmi = ROUND(
@@ -464,6 +466,8 @@ AFTER INSERT
 AS
 BEGIN
     SET NOCOUNT ON;
+    -- Clear session context so cascaded audit rows are attributed to System
+    EXEC sys.sp_set_session_context @key=N'user_id', @value=NULL;
 
     UPDATE v
     SET is_abnormal = 1

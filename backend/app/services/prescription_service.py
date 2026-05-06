@@ -37,7 +37,7 @@ def create_prescription(
     """
     Calls usp_record_prescription which:
       - Verifies the encounter is still open
-      - Cross-checks patient allergies (exact case-insensitive match)
+      - Cross-checks patient allergies (skipped when force_override=True)
       - Inserts the prescription row atomically
       - Writes an audit log entry
     Raises HTTP 409 on allergy conflict or closed encounter.
@@ -54,21 +54,23 @@ def create_prescription(
             @p_duration        = :duration,
             @p_route           = :route,
             @p_instructions    = :instructions,
-            @p_prescription_id = @new_id OUTPUT;
+            @p_prescription_id = @new_id OUTPUT,
+            @p_force_override  = :force_override;
         SELECT @new_id AS prescription_id;
     """)
 
     try:
         result = db.execute(sql, {
-            "encounter_id": str(encounter_id),
-            "patient_id":   str(payload.patient_id),
-            "doctor_id":    str(payload.doctor_id),
-            "drug_name":    payload.drug_name,
-            "dosage":       payload.dosage,
-            "frequency":    payload.frequency,
-            "duration":     payload.duration,
-            "route":        payload.route,
-            "instructions": payload.instructions,
+            "encounter_id":   str(encounter_id),
+            "patient_id":     str(payload.patient_id),
+            "doctor_id":      str(payload.doctor_id),
+            "drug_name":      payload.drug_name,
+            "dosage":         payload.dosage,
+            "frequency":      payload.frequency,
+            "duration":       payload.duration,
+            "route":          payload.route,
+            "instructions":   payload.instructions,
+            "force_override": 1 if payload.force_override else 0,
         })
         new_id = result.scalar()
         db.commit()

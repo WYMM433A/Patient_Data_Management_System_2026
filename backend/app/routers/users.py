@@ -22,6 +22,15 @@ def list_users(
     return user_service.list_users(db, skip, limit)
 
 
+@router.get("/doctors", response_model=List[UserOut])
+def list_doctors(
+    db: Session = Depends(get_db),
+    _=Depends(require_permission("view_patient_record")),
+):
+    """Returns all active doctors. Accessible to any role that can view patients."""
+    return user_service.list_doctors(db)
+
+
 @router.post("", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def create_user(
     payload: UserCreate,

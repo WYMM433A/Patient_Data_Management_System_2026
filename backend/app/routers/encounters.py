@@ -38,7 +38,7 @@ def list_encounters(
     skip:  int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("create_encounter")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return encounter_service.list_encounters(db, patient_id, doctor_id, enc_status, skip, limit)
 
@@ -47,7 +47,7 @@ def list_encounters(
 def get_encounter(
     encounter_id: UUID,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("create_encounter")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return encounter_service.get_encounter(db, encounter_id)
 
@@ -69,7 +69,7 @@ def close_encounter(
 def get_soap_note(
     encounter_id: UUID,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("create_encounter")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return encounter_service.get_soap_note(db, encounter_id)
 
@@ -79,7 +79,7 @@ def update_soap_note(
     encounter_id: UUID,
     payload: SOAPNoteUpdate,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("create_encounter")),
+    _=Depends(require_permission("write_clinical_notes")),
 ):
     return encounter_service.update_soap_note(db, encounter_id, payload)
 
@@ -93,7 +93,7 @@ def add_vitals(
     encounter_id: UUID,
     payload: VitalsCreate,
     db: Session = Depends(get_db),
-    current_user=Depends(require_permission("create_encounter")),
+    current_user=Depends(require_permission("record_vitals")),
 ):
     return encounter_service.add_vitals(db, encounter_id, payload, current_user.user_id)
 
@@ -102,7 +102,7 @@ def add_vitals(
 def list_vitals(
     encounter_id: UUID,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("create_encounter")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return encounter_service.list_vitals(db, encounter_id)
 
@@ -125,7 +125,7 @@ def add_diagnosis(
 def list_diagnoses(
     encounter_id: UUID,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("create_encounter")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return encounter_service.list_diagnoses(db, encounter_id)
 

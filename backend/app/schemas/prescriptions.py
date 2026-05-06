@@ -18,9 +18,10 @@ class PrescriptionCreate(BaseModel):
     dosage:       Optional[str] = None
     frequency:    Optional[str] = None
     duration:     Optional[str] = None
-    route:        Optional[str] = None
-    instructions: Optional[str] = None
-    event_date:   Optional[datetime] = None
+    route:          Optional[str] = None
+    instructions:   Optional[str] = None
+    event_date:     Optional[datetime] = None
+    force_override: bool = False
 
     @field_validator("route")
     @classmethod

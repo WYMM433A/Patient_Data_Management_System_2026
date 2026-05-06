@@ -63,7 +63,7 @@ def list_orders_by_encounter(
     skip:  int = 0,
     limit: int = 50,
     db: Session = Depends(get_db),
-    _=Depends(require_permission("view_lab_orders")),
+    _=Depends(require_permission("view_patient_record")),
 ):
     return lab_service.list_orders(db, encounter_id=encounter_id, order_status=order_status, skip=skip, limit=limit)
 

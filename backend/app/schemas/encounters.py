@@ -11,7 +11,7 @@ from datetime import datetime, date
 class EncounterCreate(BaseModel):
     patient_id:      UUID
     doctor_id:       UUID
-    appointment_id:  Optional[UUID] = None
+    appointment_id:  UUID               # required — encounter must be tied to an appointment
     encounter_type:  str
     chief_complaint: Optional[str] = None
 

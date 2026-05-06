@@ -1,0 +1,72 @@
+/* ============================================================
+   PDMS — Design Tokens
+   Change colors / fonts / spacing here; everything else adapts.
+   ============================================================ */
+:root {
+  /* ── Brand / Primary (sky blue) ── */
+  --primary:        #0ea5e9;
+  --primary-light:  #38bdf8;
+  --primary-dark:   #0284c7;
+  --primary-dim:    #e0f2fe;
+
+  /* ── Accent / Secondary (teal) ── */
+  --accent:         #0d9488;
+  --accent-dim:     #ccfbf1;
+  --accent-hover:   #0f766e;
+
+  /* ── Semantic ── */
+  --danger:         #ef4444;
+  --danger-dim:     #fef2f2;
+  --danger-hover:   #dc2626;
+  --warning:        #f59e0b;
+  --warning-dim:    #fffbeb;
+  --success:        #22c55e;
+  --success-dim:    #f0fdf4;
+
+  /* ── Surfaces ── */
+  --bg:             #f1f5f9;
+  --surface:        #ffffff;
+  --surface2:       #f8fafc;
+  --border:         #e2e8f0;
+  --border2:        #cbd5e1;
+
+  /* ── Typography ── */
+  --text:           #1e293b;
+  --text2:          #334155;
+  --text3:          #64748b;
+  --text4:          #94a3b8;
+
+  /* ── Elevation ── */
+  --shadow:         0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:      0 4px 16px rgba(0,0,0,.10);
+  --shadow-lg:      0 10px 40px rgba(0,0,0,.15);
+
+  /* ── Shape ── */
+  --radius:         10px;
+  --radius-sm:      8px;
+
+  /* ── Layout ── */
+  --sidebar-w:      220px;
+  --header-h:       60px;
+
+  /* ── Fonts ── */
+  --font:           'Inter', sans-serif;
+  --mono:           'DM Mono', monospace;
+
+  /* ── Sidebar (dark panel) ── */
+  --sidebar-bg:         #1e2a3a;
+  --sidebar-divider:    rgba(255,255,255,.08);
+  --sidebar-nav-color:  rgba(255,255,255,.55);
+  --sidebar-nav-hover:  rgba(255,255,255,.07);
+
+  /* ── Table rows ── */
+  --row-hover:          #f8fafc;
+  --row-abnormal:       #fff5f5;
+  --row-abnormal-hover: #fee2e2;
+
+  /* ── Overlay ── */
+  --overlay-bg:         rgba(15,23,42,.55);
+
+  /* ── Login gradient ── */
+  --login-bg: linear-gradient(135deg, #0f172a 0%, #1e2a3a 60%, #1a3a5c 100%);
+}
