@@ -2,27 +2,51 @@
    PDMS — Pages: page-specific layout and overrides
    ============================================================ */
 
-/* ── Patient profile header (dark hero) ── */
+/* ── Dashboard greeting ── */
+.dash-greeting { margin-bottom: 22px; }
+.dash-greeting h2 { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -.3px; font-family: var(--heading); }
+.dash-greeting p  { font-size: 13px; color: var(--text3); margin-top: 4px; }
+
+/* ── Dashboard mini-table ── */
+.dash-table { width: 100%; border-collapse: collapse; }
+.dash-table thead th { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); padding: 8px 14px; border-bottom: 1.5px solid var(--border); }
+.dash-table tbody td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.dash-table tbody tr:last-child td { border-bottom: none; }
+.dash-table tbody tr:hover td { background: var(--surface2); }
+
+/* ── Encounter feed ── */
+.enc-feed { display: flex; flex-direction: column; }
+.enc-feed-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
+.enc-feed-item:last-child { border-bottom: none; }
+.enc-feed-item:hover { background: var(--surface2); }
+.enc-feed-av { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+.enc-feed-name      { font-size: 13px; font-weight: 600; color: var(--text); }
+.enc-feed-complaint { font-size: 12px; color: var(--text3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+
+/* ── Dashboard appointment list ── */
+.appt-list { display: flex; flex-direction: column; gap: 8px; }
+.appt-item { display: flex; align-items: center; gap: 12px; padding: 11px 16px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); transition: border-color .15s; }
+.appt-item:hover { border-color: var(--primary); }
+.appt-time    { font-family: var(--mono); font-size: 12px; color: var(--primary); width: 52px; flex-shrink: 0; font-weight: 600; }
+.appt-patient { font-size: 13px; font-weight: 500; flex: 1; }
+.appt-reason  { font-size: 12px; color: var(--text3); }
+
+/* ── Patient profile header ── */
 .patient-header {
-  background: var(--sidebar-bg);
+  background: var(--text);
   border-radius: var(--radius);
   padding: 24px 28px;
   margin-bottom: 20px;
   display: flex; align-items: center; gap: 20px;
 }
 .patient-avatar {
-  width: 66px; height: 66px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.10);
-  border: 2px solid rgba(255,255,255,.22);
+  width: 66px; height: 66px; border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  border: 2px solid rgba(255,255,255,.25);
   display: flex; align-items: center; justify-content: center;
-  font-size: 22px; font-weight: 700; color: #fff;
-  flex-shrink: 0;
+  font-size: 22px; font-weight: 700; color: #fff; flex-shrink: 0;
 }
-.patient-info h2 {
-  font-size: 20px; font-weight: 700;
-  color: #fff; margin-bottom: 4px; letter-spacing: -.3px;
-}
+.patient-info h2 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; letter-spacing: -.3px; }
 .patient-info h2 .mrn {
   background: rgba(255,255,255,.12);
   color: rgba(255,255,255,.80);
@@ -32,16 +56,12 @@
   margin-left: 8px; vertical-align: middle;
 }
 .patient-meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; }
-.patient-meta span { font-size: 12px; color: rgba(255,255,255,.50); }
-.patient-meta strong { color: rgba(255,255,255,.88); font-weight: 500; }
+.patient-meta span    { font-size: 12px; color: rgba(255,255,255,.50); }
+.patient-meta strong  { color: rgba(255,255,255,.88); font-weight: 500; }
 
 /* ── Vitals ── */
 .vital-abnormal { color: var(--danger) !important; font-weight: 600; }
-.abnormal-badge {
-  font-size: 10px;
-  background: var(--danger-dim); color: var(--danger);
-  padding: 1px 6px; border-radius: 10px; margin-left: 4px;
-}
+.abnormal-badge { font-size: 10px; background: var(--danger-dim); color: var(--danger); padding: 1px 6px; border-radius: 10px; margin-left: 4px; }
 
 /* ── Encounter ── */
 .enc-closed { opacity: .6; }
@@ -49,15 +69,13 @@
 
 /* ── Encounter patient header strip ── */
 #enc-patient-header {
-  background: var(--sidebar-bg);
+  background: linear-gradient(135deg, #282828 0%, #3a2a1a 100%);
   border-radius: var(--radius);
   padding: 16px 22px;
   display: flex; align-items: center; gap: 14px;
-  color: #fff;
 }
 #enc-patient-header .enc-avatar {
-  width: 44px; height: 44px;
-  border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   background: rgba(255,255,255,.10);
   border: 2px solid rgba(255,255,255,.18);
   display: flex; align-items: center; justify-content: center;
@@ -68,209 +86,87 @@
 
 /* ── Encounter info bar ── */
 #enc-info-bar {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 22px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 22px;
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  font-size: 13px; color: var(--text2);
-  box-shadow: var(--shadow);
+  font-size: 13px; color: var(--text2); box-shadow: var(--shadow);
 }
 
 /* ── SOAP editor ── */
 .soap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .soap-field {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: var(--shadow);
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);
 }
 .soap-label {
   font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .8px;
-  margin-bottom: 10px;
-  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
 }
 .soap-field:nth-child(1) .soap-label { color: #0ea5e9; }
 .soap-field:nth-child(2) .soap-label { color: #0d9488; }
 .soap-field:nth-child(3) .soap-label { color: #8b5cf6; }
 .soap-field:nth-child(4) .soap-label { color: #f59e0b; }
 .soap-field textarea {
-  width: 100%; min-height: 110px;
-  padding: 10px 12px;
+  width: 100%; min-height: 110px; padding: 10px 12px;
   border: 1.5px solid var(--border); border-radius: var(--radius-sm);
   font-size: 13px; resize: vertical; outline: none;
   color: var(--text); background: var(--surface2);
-  line-height: 1.6;
-  transition: border-color .15s;
+  line-height: 1.6; transition: border-color .15s; font-family: var(--font);
 }
 .soap-field textarea:focus { border-color: var(--primary); background: var(--surface); }
 
-/* ── Dashboard appointment list ── */
-.appt-list { display: flex; flex-direction: column; gap: 8px; }
-.appt-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 11px 16px;
-  background: var(--surface2);
-  border-radius: var(--radius-sm); border: 1px solid var(--border);
-  transition: border-color .15s;
-}
-.appt-item:hover { border-color: var(--primary); }
-.appt-time    { font-family: var(--mono); font-size: 12px; color: var(--primary); width: 52px; flex-shrink: 0; font-weight: 600; }
-.appt-patient { font-size: 13px; font-weight: 500; flex: 1; }
-.appt-reason  { font-size: 12px; color: var(--text3); }
-
-/* ── Inline status dots ── */
-.status-dot {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 12px; font-weight: 500;
-}
-.status-dot::before {
-  content: ''; width: 7px; height: 7px;
-  border-radius: 50%; flex-shrink: 0;
-}
-.status-dot.active   { color: #16a34a; }
-.status-dot.active::before   { background: #22c55e; }
-.status-dot.inactive { color: var(--text3); }
-.status-dot.inactive::before { background: var(--text4); }
-.status-dot.critical { color: #ea580c; font-weight: 600; }
-.status-dot.critical::before { background: #f97316; }
-.status-dot.in-progress { color: #d97706; }
-.status-dot.in-progress::before { background: #f59e0b; }
-
-/* ============================================================
-   Enhanced UI — colorful stat cards, topbar, patient list
-   ============================================================ */
-
-/* Colored top-border stat cards */
-.sc-blue   { border-top: 3px solid #0ea5e9; }
-.sc-blue   .stat-val { color: #0ea5e9; }
-.sc-teal   { border-top: 3px solid #0d9488; }
-.sc-teal   .stat-val { color: #0d9488; }
-.sc-orange { border-top: 3px solid #f97316; }
-.sc-orange .stat-val { color: #f97316; }
-.sc-green  { border-top: 3px solid #22c55e; }
-.sc-green  .stat-val { color: #22c55e; }
-.sc-purple { border-top: 3px solid #8b5cf6; }
-.sc-purple .stat-val { color: #8b5cf6; }
-
-/* Stat card icon box */
-.stat-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.si-blue   { background: #e0f2fe; color: #0ea5e9; }
-.si-teal   { background: #ccfbf1; color: #0d9488; }
-.si-orange { background: #ffedd5; color: #f97316; }
-.si-green  { background: #dcfce7; color: #22c55e; }
-.si-purple { background: #ede9fe; color: #8b5cf6; }
-
-/* Dashboard greeting */
-.dash-greeting { margin-bottom: 22px; }
-.dash-greeting h2 { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -.3px; }
-.dash-greeting p  { font-size: 13px; color: var(--text3); margin-top: 3px; }
-
-/* Dashboard mini-table */
-.dash-table { width: 100%; border-collapse: collapse; }
-.dash-table thead th { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text3); padding: 8px 14px; border-bottom: 1.5px solid var(--border); }
-.dash-table tbody td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border); }
-.dash-table tbody tr:last-child td { border-bottom: none; }
-.dash-table tbody tr:hover td { background: var(--surface2); }
-
-/* Encounter feed */
-.enc-feed { display: flex; flex-direction: column; }
-.enc-feed-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .15s; }
-.enc-feed-item:last-child { border-bottom: none; }
-.enc-feed-item:hover { background: var(--surface2); }
-.enc-feed-av { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
-.enc-feed-name  { font-size: 13px; font-weight: 600; color: var(--text); }
-.enc-feed-complaint { font-size: 12px; color: var(--text3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
-
-/* Patient list improvements */
-.mrn-link { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--primary); }
-.pt-av    { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
-.badge-blood { display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 700; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-.badge-pt-active   { background: #dcfce7; color: #166534; border: 1.5px solid #86efac; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; display: inline-block; }
-.badge-pt-inactive { background: var(--surface2); color: var(--text3); border: 1.5px solid var(--border2); font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; display: inline-block; }
-.badge-pt-critical { background: #fff7ed; color: #c2410c; border: 1.5px solid #fdba74; font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; display: inline-block; }
-
-/* View Profile outline button */
-.btn-outline { background: transparent; border: 1.5px solid var(--border2); border-radius: 7px; color: var(--text2); font-size: 12px; font-weight: 500; padding: 5px 12px; cursor: pointer; transition: all .15s; white-space: nowrap; }
-.btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-dim); }
-
-/* Better tabs — underline style */
-.tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
-.tab  { padding: 10px 18px; font-size: 13px; font-weight: 500; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s; white-space: nowrap; }
-.tab:hover  { color: var(--text); }
-.tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
-
-/* Topbar user chip (right side) */
-.topbar-user { display: flex; align-items: center; gap: 10px; padding: 5px 12px; border-radius: 10px; cursor: default; border: 1px solid var(--border); background: var(--surface2); }
-.topbar-user-av { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
-.topbar-user-name { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
-.topbar-user-role { font-size: 10px; color: var(--text3); text-transform: capitalize; }
-
-/* Encounter header gradient */
-#enc-patient-header { background: linear-gradient(135deg, #1e2a3a 0%, #1a3a5c 100%); }
-
-/* ============================================================
+/* ══════════════════════════════════════════════════════
    Appointment Schedule View
-   ============================================================ */
-
-/* Toolbar */
+   ══════════════════════════════════════════════════════ */
 .sched-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
 .sched-nav { display: flex; align-items: center; gap: 6px; }
 .sched-nav-btn { width: 34px; height: 34px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
 .sched-nav-btn:hover { border-color: var(--primary); color: var(--primary); }
-.sched-today-btn { padding: 6px 14px; border-radius: 8px; border: 1.5px solid var(--primary); background: var(--surface); color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.sched-today-btn { padding: 6px 14px; border-radius: 8px; border: 1.5px solid var(--primary); background: var(--surface); color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; font-family: var(--font); }
 .sched-today-btn:hover { background: var(--primary); color: #fff; }
-.sched-date-label { font-size: 15px; font-weight: 600; color: var(--text); margin-left: 8px; }
-.sched-status-filter { padding: 6px 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); font-size: 13px; color: var(--text); }
-.sched-view-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text3); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; }
+.sched-date-label { font-size: 15px; font-weight: 600; color: var(--text); margin-left: 8px; font-family: var(--heading); }
+.sched-status-filter { padding: 6px 10px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); font-size: 13px; color: var(--text); font-family: var(--font); }
+.sched-view-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); color: var(--text3); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; font-family: var(--font); }
 .sched-view-btn:hover { border-color: var(--primary); color: var(--primary); }
 .sched-view-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
-/* Summary chips */
 .sched-summary { margin-bottom: 16px; }
 .sched-summary-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .sched-chip { padding: 4px 12px; border-radius: 20px; font-size: 12px; border: 1.5px solid var(--border); background: var(--surface2); color: var(--text3); }
 
-/* Now line */
 .sched-now-line { display: flex; align-items: center; gap: 10px; margin: 4px 0; }
 .sched-now-label { font-size: 11px; font-weight: 700; color: #ef4444; min-width: 28px; }
 .sched-now-bar { flex: 1; height: 2px; background: #ef4444; border-radius: 1px; }
 
-/* Cards container */
 .sched-cards { display: flex; flex-direction: column; gap: 0; }
 .sched-empty { text-align: center; padding: 60px 20px; color: var(--text3); font-size: 15px; }
 
-/* Individual card */
-.sched-card { display: flex; gap: 0; background: var(--sc-bg, #f0f9ff); border: 1.5px solid var(--sc-border, #bae6fd); border-radius: 12px; margin-bottom: 10px; overflow: hidden; transition: box-shadow .15s; }
-.sched-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.sched-card { display: flex; gap: 0; background: var(--sc-bg, #fff5ed); border: 1.5px solid var(--sc-border, #fcd9b6); border-radius: 12px; margin-bottom: 10px; overflow: hidden; transition: box-shadow .15s; }
+.sched-card:hover { box-shadow: 0 4px 16px rgba(247,121,2,.12); }
 .sched-card-cancelled { opacity: .55; }
 
-/* Time column */
 .sched-time-col { display: flex; flex-direction: column; align-items: center; padding: 16px 14px 0; min-width: 62px; }
-.sched-time { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--sc-time, #0369a1); white-space: nowrap; }
+.sched-time { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--sc-time, var(--primary)); white-space: nowrap; }
 .sched-dot { width: 10px; height: 10px; border-radius: 50%; margin: 8px 0 4px; flex-shrink: 0; }
-.sched-line { flex: 1; width: 2px; background: var(--sc-border, #bae6fd); margin-bottom: 0; min-height: 10px; }
+.sched-line { flex: 1; width: 2px; background: var(--sc-border, #fcd9b6); margin-bottom: 0; min-height: 10px; }
 
-/* Card body */
 .sched-body { flex: 1; padding: 14px 16px 14px 8px; }
 .sched-card-inner { display: flex; align-items: flex-start; gap: 12px; }
 .sched-patient-av { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--primary)); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; margin-top: 1px; }
 .sched-card-main { flex: 1; min-width: 0; }
 .sched-patient-name { font-size: 14px; font-weight: 600; color: var(--text); cursor: pointer; }
 .sched-patient-name:hover { color: var(--primary); }
-.sched-doctor { font-size: 12px; color: var(--text3); margin-top: 2px; }
-.sched-reason { font-size: 12px; color: var(--text2); margin-top: 4px; font-style: italic; }
+.sched-doctor  { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.sched-reason  { font-size: 12px; color: var(--text2); margin-top: 4px; font-style: italic; }
 
-/* Card right: status + actions */
 .sched-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
 .sched-status-pill { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; border: 1.5px solid; white-space: nowrap; }
 .sched-card-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.sched-action-btn { padding: 5px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.sched-action-btn { padding: 5px 12px; border-radius: 7px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; transition: all .15s; white-space: nowrap; font-family: var(--font); }
 .sched-btn-checkin { background: #0d9488; color: #fff; }
 .sched-btn-checkin:hover { background: #0f766e; }
-.sched-btn-start { background: #0ea5e9; color: #fff; }
-.sched-btn-start:hover { background: #0284c7; }
+.sched-btn-start { background: var(--primary); color: #fff; }
+.sched-btn-start:hover { background: var(--primary-dark); }
 .sched-btn-cancel { background: transparent; color: #be123c; border: 1.5px solid #fecdd3; }
 .sched-btn-cancel:hover { background: #fff1f2; }
