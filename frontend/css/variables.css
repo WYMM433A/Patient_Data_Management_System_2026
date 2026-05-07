@@ -34,6 +34,7 @@
   --text2:          #3a3a3a;
   --text3:          #666666;
   --text4:          #999999;
+  --text5:          #000000;
 
   /* ── Elevation ── */
   --shadow:         0 2px 8px rgba(40,40,40,.08);
@@ -51,6 +52,7 @@
   /* ── Fonts ── */
   --font:           'Raleway', sans-serif;
   --heading:        'Poppins', sans-serif;
+  --simpletext:   'Poppins', regular, sans-serif;
   --mono:           'DM Mono', monospace;
 
   /* ── Sidebar (warm peach) ── */
