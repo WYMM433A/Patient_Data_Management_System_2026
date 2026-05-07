@@ -1,911 +1,1123 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PDMS — Clinic Management</title>
+
+  <!-- Fonts: Raleway (body), Poppins (headings), DM Mono (code/MRN) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&family=Poppins:wght@600;700&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
 
-  <!-- Design tokens must load first so every rule can use var(--…) -->
+  <!-- CSS — load in order: tokens → reset → layout → components → pages -->
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
 </head>
+
 <body>
 
-<!-- ── TOAST ── -->
-<div id="toast-container"></div>
+  <!-- ── TOAST ── -->
+  <div id="toast-container"></div>
 
-<!-- ── LOGIN PAGE ── -->
-<div id="page-login" class="active">
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="icon">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-        </svg>
+  <!-- ── LOGIN PAGE ── -->
+  <div id="page-login" class="active">
+    <div class="login-wrapper">
+      <!-- Left side: Logo -->
+      <div class="login-left">
+        <div class="login-title">Patient Data Management System</div>
+        <img src="images/login_logo.png" alt="PDMS Logo" class="login-logo-img">
       </div>
-      <div>
-        <h1>PDMS</h1>
-        <p>Outpatient Clinic System</p>
+
+      <!-- Right side: Form -->
+      <div class="login-right">
+        <div class="login-form-card">
+          <h2 class="login-welcome">Welcome <br> back</h2>
+
+          <div id="login-error" class="alert alert-danger" style="display:none;"></div>
+
+          <div class="login-form-group">
+            <label class="login-label">Username</label>
+            <div class="login-input-wrapper">
+              <input type="text" id="login-username" class="login-input" placeholder="Enter your username"
+                autocomplete="username">
+            </div>
+          </div>
+
+          <div class="login-form-group">
+            <label class="login-label">Password</label>
+            <div class="login-input-wrapper">
+              <input type="password" id="login-password" class="login-input" placeholder="Enter your password"
+                autocomplete="current-password">
+            </div>
+          </div>
+
+          <button class="login-button" id="login-btn">Log in</button>
+        </div>
       </div>
     </div>
-    <h2>Sign in</h2>
-    <p class="sub">Enter your credentials to continue</p>
-    <div id="login-error" class="alert alert-danger" style="display:none"></div>
-    <div class="field">
-      <label>Username</label>
-      <input type="text" id="login-username" placeholder="e.g. dr_smith" autocomplete="username">
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn btn-primary btn-full" id="login-btn">Sign in</button>
-    <p style="margin-top:16px;font-size:12px;color:var(--text3);text-align:center">
-      Outpatient GP Clinic · Secure Access Only
-    </p>
   </div>
-</div>
 
-<!-- ── APP SHELL ── -->
-<div id="app">
+  <!-- ── APP SHELL ── -->
+  <div id="app">
 
-  <!-- SIDEBAR -->
-  <nav id="sidebar">
-    <div class="sidebar-header">
-      <div class="logo">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24">
-            <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 3a3 3 0 110 6 3 3 0 010-6zm6 13H6v-.6c0-2.2 4-3.4 6-3.4s6 1.2 6 3.4v.6z"/>
-          </svg>
-        </div>
-        <div>
-          <div class="logo-text">PDMS</div>
-          <div class="logo-sub">Clinic System</div>
-        </div>
-      </div>
-    </div>
-    <div class="sidebar-nav" id="sidebar-nav"></div>
-    <div class="sidebar-footer">
-      <div class="user-chip">
-        <div class="user-avatar" id="nav-avatar">?</div>
-        <div class="user-info">
-          <div class="user-name" id="nav-username">User</div>
-          <div class="user-role" id="nav-role">role</div>
-        </div>
-        <button class="btn-logout" id="btn-logout" title="Logout">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </nav>
-
-  <!-- MAIN AREA -->
-  <main id="main">
-    <div class="topbar">
-      <div class="topbar-title" id="topbar-title">Dashboard</div>
-      <div class="topbar-actions" id="topbar-actions"></div>
-    </div>
-    <div class="content">
-
-      <!-- ═══════════════════════════════════════════════════════
-           PAGES
-           ═══════════════════════════════════════════════════════ -->
-
-      <!-- DASHBOARD (doctor) -->
-      <div class="page" id="page-dashboard">
-        <div class="dash-greeting" id="dash-greeting"></div>
-        <div class="stats-grid" id="dash-stats"></div>
-        <div class="two-col">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Today's Appointments</span></div>
-            <div id="dash-appts"><div class="spinner"></div></div>
+    <!-- SIDEBAR -->
+    <nav id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <img src="images/login_logo.png" alt="PDMS Logo">
           </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">Open Encounters</span></div>
-            <div id="dash-encounters"><div class="spinner"></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PATIENT LIST -->
-      <div class="page" id="page-patients">
-        <div class="search-bar">
-          <input type="text" class="search-input" id="patient-search" placeholder="Search by name, MRN, phone…">
-          <button class="btn btn-primary"   id="btn-search-patient">Search</button>
-          <button class="btn btn-secondary" id="btn-new-patient" style="display:none">+ Register Patient</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>MRN</th><th>Full Name</th><th>Date of Birth</th><th>Gender</th><th>Phone</th><th>Blood Type</th><th>Status</th><th>Actions</th>
-            </tr></thead>
-            <tbody id="patient-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- PATIENT PROFILE -->
-      <div class="page" id="page-patient-profile">
-        <button class="btn btn-secondary btn-sm" id="btn-back-patients" style="margin-bottom:12px">← Back</button>
-        <div class="patient-header" id="profile-header"></div>
-        <div class="tabs" id="profile-tabs">
-          <div class="tab active"  data-tab="prof-overview">Overview</div>
-          <div class="tab" data-tab="prof-history"     id="tab-history">Medical History</div>
-          <div class="tab" data-tab="prof-allergies"   id="tab-allergies">Allergies</div>
-          <div class="tab" data-tab="prof-vaccinations" id="tab-vaccinations">Vaccinations</div>
-          <div class="tab" data-tab="prof-encounters"  id="tab-encounters">Encounters</div>
-        </div>
-        <div class="tab-panel active" id="prof-overview">
-          <div class="two-col" id="overview-details"></div>
-        </div>
-        <div class="tab-panel" id="prof-history">
-          <div style="margin-bottom:12px" id="hist-actions"></div>
-          <div class="table-wrap">
-            <table><thead><tr>
-              <th>Condition</th><th>ICD</th><th>Onset</th><th>Chronic</th><th>Notes</th><th></th>
-            </tr></thead><tbody id="history-tbody"></tbody></table>
-          </div>
-        </div>
-        <div class="tab-panel" id="prof-allergies">
-          <div style="margin-bottom:12px" id="allergy-actions"></div>
-          <div class="table-wrap">
-            <table><thead><tr>
-              <th>Allergen</th><th>Reaction</th><th>Severity</th><th></th>
-            </tr></thead><tbody id="allergy-tbody"></tbody></table>
-          </div>
-        </div>
-        <div class="tab-panel" id="prof-vaccinations">
-          <div style="margin-bottom:12px" id="vacc-actions"></div>
-          <div class="table-wrap">
-            <table><thead><tr>
-              <th>Vaccine</th><th>Dose</th><th>Administered</th><th>Next Due</th><th>Notes</th>
-            </tr></thead><tbody id="vacc-tbody"></tbody></table>
-          </div>
-        </div>
-        <div class="tab-panel" id="prof-encounters">
-          <div style="margin-bottom:12px" id="enc-actions"></div>
-          <div class="table-wrap">
-            <table><thead><tr>
-              <th>Date</th><th>Type</th><th>Chief Complaint</th><th>Status</th><th>Visit #</th><th></th>
-            </tr></thead><tbody id="enc-list-tbody"></tbody></table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ENCOUNTER DETAIL -->
-      <div class="page" id="page-encounter">
-        <button class="btn btn-secondary btn-sm" id="btn-back-enc" style="margin-bottom:12px">← Back to Patient</button>
-        <div id="enc-patient-header" style="margin-bottom:16px"></div>
-        <div id="enc-info-bar"       style="margin-bottom:16px"></div>
-        <div id="enc-closed-banner" class="alert alert-warning">
-          <strong>Encounter Closed</strong> — This encounter is read-only. No new entries can be added.
-        </div>
-        <div class="tabs" id="enc-tabs">
-          <div class="tab active"  data-tab="enc-soap">SOAP Note</div>
-          <div class="tab" data-tab="enc-vitals">Vitals</div>
-          <div class="tab" data-tab="enc-diagnoses">Diagnoses</div>
-          <div class="tab" data-tab="enc-prescriptions">Prescriptions</div>
-          <div class="tab" data-tab="enc-labs">Lab Orders</div>
-          <div class="tab" data-tab="enc-imaging">Imaging</div>
-          <div class="tab" data-tab="enc-referrals">Referrals</div>
-        </div>
-        <!-- SOAP -->
-        <div class="tab-panel active" id="enc-soap">
-          <div class="card">
-            <div class="soap-grid">
-              <div class="soap-field">
-                <div class="soap-label">Subjective</div>
-                <textarea id="soap-s" placeholder="Patient's reported symptoms…"></textarea>
-              </div>
-              <div class="soap-field">
-                <div class="soap-label">Objective</div>
-                <textarea id="soap-o" placeholder="Clinical observations, exam findings…"></textarea>
-              </div>
-              <div class="soap-field">
-                <div class="soap-label">Assessment</div>
-                <textarea id="soap-a" placeholder="Diagnosis or clinical impression…"></textarea>
-              </div>
-              <div class="soap-field">
-                <div class="soap-label">Plan</div>
-                <textarea id="soap-p" placeholder="Treatment plan, follow-up…"></textarea>
-              </div>
-            </div>
-            <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
-              <button class="btn btn-primary"    id="btn-save-soap">Save SOAP</button>
-              <button class="btn btn-danger btn-sm" id="btn-close-enc">Close Encounter</button>
-            </div>
-          </div>
-        </div>
-        <!-- VITALS -->
-        <div class="tab-panel" id="enc-vitals">
-          <div id="vitals-form-wrap" style="margin-bottom:16px"></div>
-          <div class="table-wrap">
-            <table><thead><tr>
-              <th>BP (sys/dia)</th><th>HR</th><th>Temp (°C)</th>
-              <th>Weight (kg)</th><th>Height (cm)</th><th>BMI</th>
-              <th>SpO₂%</th><th>RR</th><th>Abnormal</th><th>Time</th>
-            </tr></thead><tbody id="vitals-tbody"></tbody></table>
-          </div>
-        </div>
-        <!-- DIAGNOSES -->
-        <div class="tab-panel" id="enc-diagnoses">
-          <div id="dx-form-wrap" style="margin-bottom:16px"></div>
-          <div class="table-wrap">
-            <table><thead><tr>
-              <th>ICD Code</th><th>Description</th><th>Type</th>
-              <th>Condition</th><th>Timing</th><th>Chronic</th><th></th>
-            </tr></thead><tbody id="dx-tbody"></tbody></table>
-          </div>
-        </div>
-        <!-- PRESCRIPTIONS -->
-        <div class="tab-panel" id="enc-prescriptions">
-          <div id="allergy-conflict" class="alert alert-danger" style="display:none"></div>
-          <div id="rx-form-wrap" style="margin-bottom:16px"></div>
-          <div class="table-wrap">
-            <table><thead><tr>
-              <th>Drug</th><th>Dosage</th><th>Frequency</th>
-              <th>Duration</th><th>Route</th><th>Active</th><th>Date</th>
-            </tr></thead><tbody id="rx-tbody"></tbody></table>
-          </div>
-        </div>
-        <!-- LAB ORDERS -->
-        <div class="tab-panel" id="enc-labs">
-          <div id="lab-form-wrap" style="margin-bottom:16px"></div>
-          <div id="lab-orders-list"></div>
-        </div>
-        <!-- IMAGING -->
-        <div class="tab-panel" id="enc-imaging">
-          <div id="img-form-wrap" style="margin-bottom:16px"></div>
-          <div class="table-wrap">
-            <table><thead><tr>
-              <th>Type</th><th>Body Part</th><th>Findings</th><th>Radiologist Notes</th><th>Date</th>
-            </tr></thead><tbody id="imaging-tbody"></tbody></table>
-          </div>
-        </div>
-        <!-- REFERRALS -->
-        <div class="tab-panel" id="enc-referrals">
-          <div id="ref-form-wrap" style="margin-bottom:16px"></div>
-          <div class="table-wrap">
-            <table><thead><tr>
-              <th>Specialty</th><th>Reason</th><th>Urgency</th><th>Status</th><th>Date</th>
-            </tr></thead><tbody id="ref-tbody"></tbody></table>
-          </div>
-        </div>
-      </div>
-
-      <!-- APPOINTMENTS -->
-      <div class="page" id="page-appointments">
-
-        <!-- Toolbar -->
-        <div class="sched-toolbar">
-          <div class="sched-nav">
-            <button class="sched-nav-btn" id="sched-prev" title="Previous day">&#8592;</button>
-            <button class="sched-today-btn" id="sched-today">Today</button>
-            <button class="sched-nav-btn" id="sched-next" title="Next day">&#8594;</button>
-            <span class="sched-date-label" id="sched-date-label"></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
-            <select id="appt-filter-status" class="sched-status-filter">
-              <option value="">All Statuses</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="checked_in">Checked In</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <button class="sched-view-btn active" id="btn-view-schedule" title="Schedule view">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              Schedule
-            </button>
-            <button class="sched-view-btn" id="btn-view-list" title="List view">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-              List
-            </button>
-            <button class="btn btn-primary" id="btn-new-appt" style="display:none">+ Book Appointment</button>
-          </div>
-        </div>
-
-        <!-- Schedule view -->
-        <div id="appt-schedule-view">
-          <div class="sched-summary" id="sched-summary"></div>
-          <div class="sched-cards" id="sched-cards"></div>
-        </div>
-
-        <!-- List view (hidden by default) -->
-        <div id="appt-list-view" style="display:none">
-          <div class="table-wrap">
-            <table><thead><tr>
-              <th>Date/Time</th><th>Patient</th><th>Doctor</th><th>Reason</th><th>Status</th><th>Actions</th>
-            </tr></thead><tbody id="appt-tbody"></tbody></table>
-          </div>
-        </div>
-      </div>
-
-      <!-- STAFF MANAGEMENT (system_admin) -->
-      <div class="page" id="page-users">
-        <div class="admin-page-header">
           <div>
-            <h1 class="admin-page-title">Staff Management</h1>
-            <p class="admin-page-sub">Manage hospital staff accounts, roles, and system access levels.</p>
+            <div class="logo-text">PDMS</div>
+            <div class="logo-sub">Clinic Management</div>
           </div>
-          <button class="btn btn-primary" id="btn-new-user">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-3px;margin-right:6px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-            Add Staff
+        </div>
+      </div>
+      <div class="sidebar-nav" id="sidebar-nav"></div>
+      <div class="sidebar-footer">
+        <div class="user-chip">
+          <div class="user-avatar" id="nav-avatar">?</div>
+          <div class="user-info">
+            <div class="user-name" id="nav-username">User</div>
+            <div class="user-role" id="nav-role">role</div>
+          </div>
+          <button class="btn-logout" id="btn-logout" title="Logout">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
+            </svg>
           </button>
         </div>
-
-        <!-- Stat cards -->
-        <div class="admin-stats" id="staff-stats">
-          <div class="admin-stat-card">
-            <div>
-              <div class="admin-stat-label">TOTAL STAFF</div>
-              <div class="admin-stat-num" id="stat-total">—</div>
-            </div>
-            <div class="admin-stat-icon" style="background:rgba(14,165,233,.12);color:#0ea5e9">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-          </div>
-          <div class="admin-stat-card">
-            <div>
-              <div class="admin-stat-label">ACTIVE</div>
-              <div class="admin-stat-num" style="color:#22c55e" id="stat-active">—</div>
-            </div>
-            <div class="admin-stat-icon" style="background:rgba(34,197,94,.12);color:#22c55e">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
-            </div>
-          </div>
-          <div class="admin-stat-card">
-            <div>
-              <div class="admin-stat-label">INACTIVE</div>
-              <div class="admin-stat-num" style="color:#94a3b8" id="stat-inactive">—</div>
-            </div>
-            <div class="admin-stat-icon" style="background:rgba(148,163,184,.12);color:#94a3b8">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>
-            </div>
-          </div>
-        </div>
-
-        <!-- Search row -->
-        <div class="admin-toolbar">
-          <div class="admin-search-wrap">
-            <svg class="admin-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" id="user-search" class="admin-search-input" placeholder="Search staff members...">
-          </div>
-        </div>
-
-        <!-- Table -->
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>FULL NAME</th><th>USERNAME</th><th>ROLE</th><th>EMAIL</th>
-              <th>STATUS</th><th>LAST LOGIN</th><th>ACTIONS</th>
-            </tr></thead>
-            <tbody id="users-tbody"></tbody>
-          </table>
-        </div>
-        <div class="admin-table-footer" id="users-footer"></div>
       </div>
+    </nav>
 
-      <!-- AUDIT LOGS -->
-      <div class="page" id="page-audit">
-        <div class="admin-page-header">
-          <div>
-            <h1 class="admin-page-title">System Audit Log</h1>
-            <p class="admin-page-sub">All system activity — read only</p>
+    <!-- MAIN AREA -->
+    <main id="main">
+      <div class="topbar">
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-actions" id="topbar-actions"></div>
+      </div>
+      <div class="content">
+
+        <!-- DASHBOARD -->
+        <div class="page" id="page-dashboard">
+          <div class="dash-greeting" id="dash-greeting"></div>
+          <div class="stats-grid" id="dash-stats"></div>
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Today's Appointments</span></div>
+              <div id="dash-appts">
+                <div class="spinner"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Open Encounters</span></div>
+              <div id="dash-encounters">
+                <div class="spinner"></div>
+              </div>
+            </div>
           </div>
-          <div style="display:flex;gap:10px">
+        </div>
+
+        <!-- PATIENT LIST -->
+        <div class="page" id="page-patients">
+          <div class="search-bar">
+            <input type="text" class="search-input" id="patient-search" placeholder="Search by name, MRN, phone…">
+            <button class="btn btn-primary" id="btn-search-patient">Search</button>
+            <button class="btn btn-secondary" id="btn-new-patient" style="display:none">+ Register Patient</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>MRN</th>
+                  <th>Full Name</th>
+                  <th>Date of Birth</th>
+                  <th>Gender</th>
+                  <th>Phone</th>
+                  <th>Blood Type</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="patient-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PATIENT PROFILE -->
+        <div class="page" id="page-patient-profile">
+          <button class="btn btn-secondary btn-sm" id="btn-back-patients" style="margin-bottom:12px">← Back</button>
+          <div class="patient-header" id="profile-header"></div>
+          <div class="tabs" id="profile-tabs">
+            <div class="tab active" data-tab="prof-overview">Overview</div>
+            <div class="tab" data-tab="prof-history" id="tab-history">Medical History</div>
+            <div class="tab" data-tab="prof-allergies" id="tab-allergies">Allergies</div>
+            <div class="tab" data-tab="prof-vaccinations" id="tab-vaccinations">Vaccinations</div>
+            <div class="tab" data-tab="prof-encounters" id="tab-encounters">Encounters</div>
+          </div>
+          <div class="tab-panel active" id="prof-overview">
+            <div class="two-col" id="overview-details"></div>
+          </div>
+          <div class="tab-panel" id="prof-history">
+            <div style="margin-bottom:12px" id="hist-actions"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Condition</th>
+                    <th>ICD</th>
+                    <th>Onset</th>
+                    <th>Chronic</th>
+                    <th>Notes</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="history-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-panel" id="prof-allergies">
+            <div style="margin-bottom:12px" id="allergy-actions"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Allergen</th>
+                    <th>Reaction</th>
+                    <th>Severity</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="allergy-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-panel" id="prof-vaccinations">
+            <div style="margin-bottom:12px" id="vacc-actions"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Vaccine</th>
+                    <th>Dose</th>
+                    <th>Administered</th>
+                    <th>Next Due</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="vacc-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-panel" id="prof-encounters">
+            <div style="margin-bottom:12px" id="enc-actions"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Chief Complaint</th>
+                    <th>Status</th>
+                    <th>Visit #</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="enc-list-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ENCOUNTER DETAIL -->
+        <div class="page" id="page-encounter">
+          <button class="btn btn-secondary btn-sm" id="btn-back-enc" style="margin-bottom:12px">← Back to
+            Patient</button>
+          <div id="enc-patient-header" style="margin-bottom:16px"></div>
+          <div id="enc-info-bar" style="margin-bottom:16px"></div>
+          <div id="enc-closed-banner" class="alert alert-warning">
+            <strong>Encounter Closed</strong> — This encounter is read-only. No new entries can be added.
+          </div>
+          <div class="tabs" id="enc-tabs">
+            <div class="tab active" data-tab="enc-soap">SOAP Note</div>
+            <div class="tab" data-tab="enc-vitals">Vitals</div>
+            <div class="tab" data-tab="enc-diagnoses">Diagnoses</div>
+            <div class="tab" data-tab="enc-prescriptions">Prescriptions</div>
+            <div class="tab" data-tab="enc-labs">Lab Orders</div>
+            <div class="tab" data-tab="enc-imaging">Imaging</div>
+            <div class="tab" data-tab="enc-referrals">Referrals</div>
+          </div>
+          <div class="tab-panel active" id="enc-soap">
+            <div class="card">
+              <div class="soap-grid">
+                <div class="soap-field">
+                  <div class="soap-label">Subjective</div>
+                  <textarea id="soap-s" placeholder="Patient's reported symptoms…"></textarea>
+                </div>
+                <div class="soap-field">
+                  <div class="soap-label">Objective</div>
+                  <textarea id="soap-o" placeholder="Clinical observations, exam findings…"></textarea>
+                </div>
+                <div class="soap-field">
+                  <div class="soap-label">Assessment</div>
+                  <textarea id="soap-a" placeholder="Diagnosis or clinical impression…"></textarea>
+                </div>
+                <div class="soap-field">
+                  <div class="soap-label">Plan</div>
+                  <textarea id="soap-p" placeholder="Treatment plan, follow-up…"></textarea>
+                </div>
+              </div>
+              <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+                <button class="btn btn-primary" id="btn-save-soap">Save SOAP</button>
+                <button class="btn btn-danger btn-sm" id="btn-close-enc">Close Encounter</button>
+              </div>
+            </div>
+          </div>
+          <div class="tab-panel" id="enc-vitals">
+            <div id="vitals-form-wrap" style="margin-bottom:16px"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>BP (sys/dia)</th>
+                    <th>HR</th>
+                    <th>Temp (°C)</th>
+                    <th>Weight (kg)</th>
+                    <th>Height (cm)</th>
+                    <th>BMI</th>
+                    <th>SpO₂%</th>
+                    <th>RR</th>
+                    <th>Abnormal</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody id="vitals-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-panel" id="enc-diagnoses">
+            <div id="dx-form-wrap" style="margin-bottom:16px"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ICD Code</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Condition</th>
+                    <th>Timing</th>
+                    <th>Chronic</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="dx-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-panel" id="enc-prescriptions">
+            <div id="allergy-conflict" class="alert alert-danger" style="display:none"></div>
+            <div id="rx-form-wrap" style="margin-bottom:16px"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Drug</th>
+                    <th>Dosage</th>
+                    <th>Frequency</th>
+                    <th>Duration</th>
+                    <th>Route</th>
+                    <th>Active</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="rx-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-panel" id="enc-labs">
+            <div id="lab-form-wrap" style="margin-bottom:16px"></div>
+            <div id="lab-orders-list"></div>
+          </div>
+          <div class="tab-panel" id="enc-imaging">
+            <div id="img-form-wrap" style="margin-bottom:16px"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Body Part</th>
+                    <th>Findings</th>
+                    <th>Radiologist Notes</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="imaging-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tab-panel" id="enc-referrals">
+            <div id="ref-form-wrap" style="margin-bottom:16px"></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Specialty</th>
+                    <th>Reason</th>
+                    <th>Urgency</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="ref-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- APPOINTMENTS -->
+        <div class="page" id="page-appointments">
+          <div class="sched-toolbar">
+            <div class="sched-nav">
+              <button class="sched-nav-btn" id="sched-prev" title="Previous day">&#8592;</button>
+              <button class="sched-today-btn" id="sched-today">Today</button>
+              <button class="sched-nav-btn" id="sched-next" title="Next day">&#8594;</button>
+              <span class="sched-date-label" id="sched-date-label"></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+              <select id="appt-filter-status" class="sched-status-filter">
+                <option value="">All Statuses</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="checked_in">Checked In</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              <button class="sched-view-btn active" id="btn-view-schedule">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                Schedule
+              </button>
+              <button class="sched-view-btn" id="btn-view-list">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <line x1="8" y1="6" x2="21" y2="6" />
+                  <line x1="8" y1="12" x2="21" y2="12" />
+                  <line x1="8" y1="18" x2="21" y2="18" />
+                  <line x1="3" y1="6" x2="3.01" y2="6" />
+                  <line x1="3" y1="12" x2="3.01" y2="12" />
+                  <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+                List
+              </button>
+              <button class="btn btn-primary" id="btn-new-appt" style="display:none">+ Book Appointment</button>
+            </div>
+          </div>
+          <div id="appt-schedule-view">
+            <div class="sched-summary" id="sched-summary"></div>
+            <div class="sched-cards" id="sched-cards"></div>
+          </div>
+          <div id="appt-list-view" style="display:none">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date/Time</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="appt-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAFF MANAGEMENT -->
+        <div class="page" id="page-users">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">Staff Management</h1>
+              <p class="admin-page-sub">Manage hospital staff accounts, roles, and system access levels.</p>
+            </div>
+            <button class="btn btn-primary" id="btn-new-user">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="vertical-align:-3px;margin-right:6px">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <line x1="19" y1="8" x2="19" y2="14" />
+                <line x1="22" y1="11" x2="16" y2="11" />
+              </svg>
+              Add Staff
+            </button>
+          </div>
+          <div class="admin-stats" id="staff-stats">
+            <div class="admin-stat-card">
+              <div>
+                <div class="admin-stat-label">Total Staff</div>
+                <div class="admin-stat-num" id="stat-total">—</div>
+              </div>
+              <div class="admin-stat-icon" style="background:rgba(14,165,233,.12);color:#0ea5e9">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+            </div>
+            <div class="admin-stat-card">
+              <div>
+                <div class="admin-stat-label">Active</div>
+                <div class="admin-stat-num" style="color:#22c55e" id="stat-active">—</div>
+              </div>
+              <div class="admin-stat-icon" style="background:rgba(34,197,94,.12);color:#22c55e">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <polyline points="16 11 18 13 22 9" />
+                </svg>
+              </div>
+            </div>
+            <div class="admin-stat-card">
+              <div>
+                <div class="admin-stat-label">Inactive</div>
+                <div class="admin-stat-num" style="color:#94a3b8" id="stat-inactive">—</div>
+              </div>
+              <div class="admin-stat-icon" style="background:rgba(148,163,184,.12);color:#94a3b8">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <line x1="17" y1="8" x2="23" y2="14" />
+                  <line x1="23" y1="8" x2="17" y2="14" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="admin-toolbar">
+            <div class="admin-search-wrap">
+              <svg class="admin-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input type="text" id="user-search" class="admin-search-input" placeholder="Search staff members...">
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Full Name</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Last Login</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+          <div class="admin-table-footer" id="users-footer"></div>
+        </div>
+
+        <!-- AUDIT LOGS -->
+        <div class="page" id="page-audit">
+          <div class="admin-page-header">
+            <div>
+              <h1 class="admin-page-title">System Audit Log</h1>
+              <p class="admin-page-sub">All system activity — read only</p>
+            </div>
             <button class="btn btn-secondary" id="btn-audit-export">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="vertical-align:-2px;margin-right:5px">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
               Export CSV
             </button>
           </div>
+          <div class="audit-filters">
+            <div class="audit-filter-group">
+              <label class="audit-filter-label">Date From</label>
+              <input type="date" id="audit-from" class="audit-filter-input">
+            </div>
+            <div class="audit-filter-group">
+              <label class="audit-filter-label">Date To</label>
+              <input type="date" id="audit-to" class="audit-filter-input">
+            </div>
+            <div class="audit-filter-group">
+              <label class="audit-filter-label">Action</label>
+              <select id="audit-action" class="audit-filter-input">
+                <option value="">All Actions</option>
+                <option value="CREATE">CREATE</option>
+                <option value="UPDATE">UPDATE</option>
+                <option value="DELETE">DELETE</option>
+                <option value="VIEW">VIEW</option>
+              </select>
+            </div>
+            <div class="audit-filter-group">
+              <label class="audit-filter-label">Module</label>
+              <select id="audit-table" class="audit-filter-input">
+                <option value="">All Modules</option>
+                <option value="patients">patients</option>
+                <option value="encounters">encounters</option>
+                <option value="prescriptions">prescriptions</option>
+                <option value="lab_orders">lab_orders</option>
+                <option value="imaging_orders">imaging_orders</option>
+                <option value="referrals">referrals</option>
+                <option value="appointments">appointments</option>
+                <option value="users">users</option>
+              </select>
+            </div>
+            <div style="display:flex;gap:8px;align-self:flex-end">
+              <button class="btn btn-primary btn-sm" id="btn-audit-filter">Apply</button>
+              <button class="btn btn-secondary btn-sm" id="btn-audit-reset">Reset</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>User</th>
+                  <th>Action</th>
+                  <th>Module</th>
+                  <th>Table Affected</th>
+                  <th>Record ID</th>
+                </tr>
+              </thead>
+              <tbody id="audit-tbody"></tbody>
+            </table>
+          </div>
+          <div class="admin-table-footer" id="audit-footer"></div>
         </div>
 
-        <!-- Filters -->
-        <div class="audit-filters">
-          <div class="audit-filter-group">
-            <label class="audit-filter-label">DATE FROM</label>
-            <input type="date" id="audit-from" class="audit-filter-input">
-          </div>
-          <div class="audit-filter-group">
-            <label class="audit-filter-label">DATE TO</label>
-            <input type="date" id="audit-to" class="audit-filter-input">
-          </div>
-          <div class="audit-filter-group">
-            <label class="audit-filter-label">ACTION</label>
-            <select id="audit-action" class="audit-filter-input">
-              <option value="">All Actions</option>
-              <option value="CREATE">CREATE</option>
-              <option value="UPDATE">UPDATE</option>
-              <option value="DELETE">DELETE</option>
-              <option value="VIEW">VIEW</option>
+        <!-- LAB ORDERS -->
+        <div class="page" id="page-lab-orders">
+          <div class="filter-row">
+            <select id="lab-status-filter">
+              <option value="ordered">Ordered (Pending)</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="">All</option>
             </select>
+            <button class="btn btn-secondary" id="btn-filter-labs">Filter</button>
           </div>
-          <div class="audit-filter-group">
-            <label class="audit-filter-label">MODULE / TABLE</label>
-            <select id="audit-table" class="audit-filter-input">
-              <option value="">All Modules</option>
-              <option value="patients">patients</option>
-              <option value="encounters">encounters</option>
-              <option value="prescriptions">prescriptions</option>
-              <option value="lab_orders">lab_orders</option>
-              <option value="imaging_orders">imaging_orders</option>
-              <option value="referrals">referrals</option>
-              <option value="appointments">appointments</option>
-              <option value="users">users</option>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Test Name</th>
+                  <th>Category</th>
+                  <th>Priority</th>
+                  <th>Patient</th>
+                  <th>Order Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="lab-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PRESCRIPTIONS -->
+        <div class="page" id="page-prescriptions">
+          <div class="search-bar">
+            <input type="text" class="search-input" id="rx-search" placeholder="Search by patient ID or name…">
+            <select id="rx-active-filter">
+              <option value="">All</option>
+              <option value="true">Active Only</option>
+              <option value="false">Inactive</option>
             </select>
+            <button class="btn btn-secondary" id="btn-rx-search">Search</button>
           </div>
-          <div style="display:flex;gap:8px;align-self:flex-end">
-            <button class="btn btn-primary btn-sm" id="btn-audit-filter">Apply Filters</button>
-            <button class="btn btn-secondary btn-sm" id="btn-audit-reset">Reset</button>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Drug</th>
+                  <th>Patient</th>
+                  <th>Dosage</th>
+                  <th>Frequency</th>
+                  <th>Route</th>
+                  <th>Active</th>
+                  <th>Prescribed</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="pharm-rx-tbody"></tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Table -->
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>TIMESTAMP</th><th>USER</th><th>ACTION</th>
-              <th>MODULE</th><th>TABLE AFFECTED</th><th>RECORD ID</th>
-            </tr></thead>
-            <tbody id="audit-tbody"></tbody>
-          </table>
+        <!-- CARE PLANS -->
+        <div class="page" id="page-care-plans">
+          <div style="margin-bottom:16px;display:flex;justify-content:flex-end">
+            <button class="btn btn-primary" id="btn-new-care-plan">+ New Care Plan</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Condition</th>
+                  <th>Status</th>
+                  <th>Start Date</th>
+                  <th>Review Date</th>
+                  <th>Goals</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="care-plan-tbody"></tbody>
+            </table>
+          </div>
         </div>
-        <div class="admin-table-footer" id="audit-footer"></div>
-      </div>
 
-      <!-- LAB ORDERS (lab technician) -->
-      <div class="page" id="page-lab-orders">
-        <div class="filter-row">
-          <select id="lab-status-filter">
-            <option value="ordered">Ordered (Pending)</option>
-            <option value="in-progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="">All</option>
-          </select>
-          <button class="btn btn-secondary" id="btn-filter-labs">Filter</button>
-        </div>
-        <div class="table-wrap">
-          <table><thead><tr>
-            <th>Test Name</th><th>Category</th><th>Priority</th>
-            <th>Patient</th><th>Order Date</th><th>Status</th><th>Actions</th>
-          </tr></thead><tbody id="lab-tbody"></tbody></table>
-        </div>
-      </div>
+      </div><!-- .content -->
+    </main>
+  </div><!-- #app -->
 
-      <!-- PRESCRIPTIONS (pharmacist) -->
-      <div class="page" id="page-prescriptions">
-        <div class="search-bar">
-          <input type="text" class="search-input" id="rx-search" placeholder="Search by patient ID or name…">
-          <select id="rx-active-filter">
-            <option value="">All</option>
-            <option value="true">Active Only</option>
-            <option value="false">Inactive</option>
-          </select>
-          <button class="btn btn-secondary" id="btn-rx-search">Search</button>
-        </div>
-        <div class="table-wrap">
-          <table><thead><tr>
-            <th>Drug</th><th>Patient</th><th>Dosage</th><th>Frequency</th>
-            <th>Route</th><th>Active</th><th>Prescribed</th><th>Actions</th>
-          </tr></thead><tbody id="pharm-rx-tbody"></tbody></table>
-        </div>
-      </div>
-
-      <!-- CARE PLANS (doctor) -->
-      <div class="page" id="page-care-plans">
-        <div style="margin-bottom:16px;display:flex;justify-content:flex-end">
-          <button class="btn btn-primary" id="btn-new-care-plan">+ New Care Plan</button>
-        </div>
-        <div class="table-wrap">
-          <table><thead><tr>
-            <th>Patient</th><th>Condition</th><th>Status</th>
-            <th>Start Date</th><th>Review Date</th><th>Goals</th><th>Actions</th>
-          </tr></thead><tbody id="care-plan-tbody"></tbody></table>
-        </div>
-      </div>
-
-    </div><!-- .content -->
-  </main>
-</div><!-- #app -->
-
-<!-- ═══════════════════════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════════════════════
      MODALS
      ═══════════════════════════════════════════════════════════ -->
 
-<!-- Register Patient -->
-<div class="modal-overlay" id="modal-patient">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <h3 id="modal-patient-title">Register Patient</h3>
-      <button class="modal-close" data-close="modal-patient">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="field"><label>First Name *</label><input type="text"   id="pt-fname"></div>
-        <div class="field"><label>Last Name *</label><input type="text"    id="pt-lname"></div>
-        <div class="field"><label>Date of Birth *</label><input type="date" id="pt-dob"></div>
-        <div class="field"><label>Gender</label>
-          <select id="pt-gender"><option value="">—</option><option>Male</option><option>Female</option><option>Other</option></select>
+  <!-- Register Patient -->
+  <div class="modal-overlay" id="modal-patient">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-patient-title">Register Patient</h3>
+        <button class="modal-close" data-close="modal-patient">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field"><label>First Name *</label><input type="text" id="pt-fname"></div>
+          <div class="field"><label>Last Name *</label><input type="text" id="pt-lname"></div>
+          <div class="field"><label>Date of Birth *</label><input type="date" id="pt-dob"></div>
+          <div class="field"><label>Gender</label>
+            <select id="pt-gender">
+              <option value="">—</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field"><label>Blood Type</label>
+            <select id="pt-blood">
+              <option value="">—</option>
+              <option>A+</option>
+              <option>A-</option>
+              <option>B+</option>
+              <option>B-</option>
+              <option>AB+</option>
+              <option>AB-</option>
+              <option>O+</option>
+              <option>O-</option>
+            </select>
+          </div>
+          <div class="field"><label>Phone</label><input type="text" id="pt-phone"></div>
+          <div class="field"><label>Email</label><input type="email" id="pt-email"></div>
+          <div class="field span2"><label>Address</label><input type="text" id="pt-address"></div>
+          <div class="field"><label>Emergency Contact Name</label><input type="text" id="pt-ec-name"></div>
+          <div class="field"><label>Emergency Contact Phone</label><input type="text" id="pt-ec-phone"></div>
         </div>
-        <div class="field"><label>Blood Type</label>
-          <select id="pt-blood">
-            <option value="">—</option>
-            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
-            <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-patient">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-patient">Register</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book Appointment -->
+  <div class="modal-overlay" id="modal-appt">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Book Appointment</h3>
+        <button class="modal-close" data-close="modal-appt">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label>Patient</label>
+          <input type="text" id="appt-pt-search" placeholder="Search patient…">
+          <div id="appt-pt-results"
+            style="border:1px solid var(--border);border-radius:var(--radius-sm);display:none;max-height:160px;overflow-y:auto;">
+          </div>
+          <input type="hidden" id="appt-pt-id">
+        </div>
+        <div class="field"><label>Doctor</label><select id="appt-doctor"></select></div>
+        <div class="field"><label>Date &amp; Time</label><input type="datetime-local" id="appt-datetime"></div>
+        <div class="field"><label>Reason</label><input type="text" id="appt-reason"></div>
+        <div class="field"><label>Notes</label><textarea id="appt-notes" style="min-height:60px"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-appt">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-appt">Book</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Open Encounter -->
+  <div class="modal-overlay" id="modal-encounter">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Open Encounter</h3>
+        <button class="modal-close" data-close="modal-encounter">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>Encounter Type</label>
+          <select id="enc-type">
+            <option value="outpatient">Outpatient</option>
+            <option value="follow-up">Follow-up</option>
+            <option value="emergency">Emergency</option>
           </select>
         </div>
-        <div class="field"><label>Phone</label><input type="text"  id="pt-phone"></div>
-        <div class="field"><label>Email</label><input type="email" id="pt-email"></div>
-        <div class="field span2"><label>Address</label><input type="text" id="pt-address"></div>
-        <div class="field"><label>Emergency Contact Name</label><input type="text" id="pt-ec-name"></div>
-        <div class="field"><label>Emergency Contact Phone</label><input type="text" id="pt-ec-phone"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="modal-patient">Cancel</button>
-      <button class="btn btn-primary"   id="btn-save-patient">Register</button>
-    </div>
-  </div>
-</div>
-
-<!-- Book Appointment -->
-<div class="modal-overlay" id="modal-appt">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Book Appointment</h3>
-      <button class="modal-close" data-close="modal-appt">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label>Patient</label>
-        <input type="text" id="appt-pt-search" placeholder="Search patient…">
-        <div id="appt-pt-results"
-             style="border:1px solid var(--border);border-radius:var(--radius-sm);display:none;max-height:160px;overflow-y:auto;"></div>
-        <input type="hidden" id="appt-pt-id">
-      </div>
-      <div class="field"><label>Doctor</label><select id="appt-doctor"></select></div>
-      <div class="field"><label>Date &amp; Time</label><input type="datetime-local" id="appt-datetime"></div>
-      <div class="field"><label>Reason</label><input type="text" id="appt-reason"></div>
-      <div class="field"><label>Notes</label><textarea id="appt-notes" style="min-height:60px"></textarea></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="modal-appt">Cancel</button>
-      <button class="btn btn-primary"   id="btn-save-appt">Book</button>
-    </div>
-  </div>
-</div>
-
-<!-- Open Encounter -->
-<div class="modal-overlay" id="modal-encounter">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Open Encounter</h3>
-      <button class="modal-close" data-close="modal-encounter">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="field"><label>Encounter Type</label>
-        <select id="enc-type">
-          <option value="outpatient">Outpatient</option>
-          <option value="follow-up">Follow-up</option>
-          <option value="emergency">Emergency</option>
-        </select>
-      </div>
-      <div class="field"><label>Chief Complaint</label>
-        <textarea id="enc-complaint" style="min-height:60px"></textarea>
-      </div>
-      <input type="hidden" id="enc-patient-id-hidden">
-      <input type="hidden" id="enc-appt-id-hidden">
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="modal-encounter">Cancel</button>
-      <button class="btn btn-primary"   id="btn-open-encounter">Open Encounter</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add Medical History -->
-<div class="modal-overlay" id="modal-history">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Add Medical History</h3>
-      <button class="modal-close" data-close="modal-history">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="field"><label>Condition Name *</label><input type="text"  id="hist-condition"></div>
-      <div class="field"><label>ICD Code</label><input type="text"          id="hist-icd"></div>
-      <div class="field"><label>Onset Date</label><input type="date"        id="hist-onset"></div>
-      <div class="field"><label>Chronic</label>
-        <select id="hist-chronic"><option value="false">No</option><option value="true">Yes</option></select>
-      </div>
-      <div class="field"><label>Notes</label><textarea id="hist-notes" style="min-height:60px"></textarea></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="modal-history">Cancel</button>
-      <button class="btn btn-primary"   id="btn-save-history">Add</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add Allergy -->
-<div class="modal-overlay" id="modal-allergy">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Add Allergy</h3>
-      <button class="modal-close" data-close="modal-allergy">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="field"><label>Allergen *</label><input type="text" id="allergy-name"></div>
-      <div class="field"><label>Reaction Type</label><input type="text" id="allergy-reaction" placeholder="e.g. rash, anaphylaxis"></div>
-      <div class="field"><label>Severity *</label>
-        <select id="allergy-severity">
-          <option value="mild">Mild</option>
-          <option value="moderate">Moderate</option>
-          <option value="severe">Severe</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="modal-allergy">Cancel</button>
-      <button class="btn btn-primary"   id="btn-save-allergy">Add</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add Vaccination -->
-<div class="modal-overlay" id="modal-vacc">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Add Vaccination</h3>
-      <button class="modal-close" data-close="modal-vacc">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="field"><label>Vaccine Name *</label><input type="text"          id="vacc-name"></div>
-      <div class="field"><label>Dose Number</label><input type="number" min="1"   id="vacc-dose"></div>
-      <div class="field"><label>Administered At *</label><input type="date" id="vacc-admin"></div>
-      <div class="field"><label>Next Due Date</label><input type="date"            id="vacc-next"></div>
-      <div class="field"><label>Notes</label><textarea id="vacc-notes" style="min-height:60px"></textarea></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="modal-vacc">Cancel</button>
-      <button class="btn btn-primary"   id="btn-save-vacc">Add</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add New Staff Member -->
-<div class="modal-overlay" id="modal-user">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <div>
-        <h3>Add New Staff Member</h3>
-        <p style="font-size:13px;color:var(--text3);margin-top:2px">Fill in the details to create a new system user account.</p>
-      </div>
-      <button class="modal-close" data-close="modal-user">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="field"><label>First Name *</label><input type="text"  id="user-fname"    placeholder="e.g. Jonathan"></div>
-        <div class="field"><label>Last Name *</label><input type="text"   id="user-lname"    placeholder="e.g. Smith"></div>
-        <div class="field">
-          <label>Username *</label>
-          <div class="input-prefix-wrap"><span class="input-prefix">@</span><input type="text" id="user-username" placeholder="jsmith_admin"></div>
+        <div class="field"><label>Chief Complaint</label>
+          <textarea id="enc-complaint" style="min-height:60px"></textarea>
         </div>
-        <div class="field"><label>Email *</label><input type="email" id="user-email" placeholder="j.smith@pdms.hospital"></div>
+        <input type="hidden" id="enc-patient-id-hidden">
+        <input type="hidden" id="enc-appt-id-hidden">
       </div>
-
-      <div class="field" style="margin-top:4px">
-        <label>Role *</label>
-        <select id="user-role" class="role-select"></select>
-        <div class="role-pills" id="role-pills"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-encounter">Cancel</button>
+        <button class="btn btn-primary" id="btn-open-encounter">Open Encounter</button>
       </div>
+    </div>
+  </div>
 
-      <div class="form-grid" style="margin-top:4px">
-        <div class="field">
-          <label>Password *</label>
-          <div class="input-eye-wrap">
-            <input type="password" id="user-password" placeholder="••••••••" autocomplete="new-password">
-            <button type="button" class="eye-btn" id="btn-toggle-pw">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-          </div>
+  <!-- Add Medical History -->
+  <div class="modal-overlay" id="modal-history">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Medical History</h3>
+        <button class="modal-close" data-close="modal-history">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>Condition Name *</label><input type="text" id="hist-condition"></div>
+        <div class="field"><label>ICD Code</label><input type="text" id="hist-icd"></div>
+        <div class="field"><label>Onset Date</label><input type="date" id="hist-onset"></div>
+        <div class="field"><label>Chronic</label>
+          <select id="hist-chronic">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
         </div>
-        <div class="field">
-          <label>Confirm Password *</label>
-          <input type="password" id="user-password-confirm" placeholder="••••••••" autocomplete="new-password">
+        <div class="field"><label>Notes</label><textarea id="hist-notes" style="min-height:60px"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-history">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-history">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Allergy -->
+  <div class="modal-overlay" id="modal-allergy">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Allergy</h3>
+        <button class="modal-close" data-close="modal-allergy">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>Allergen *</label><input type="text" id="allergy-name"></div>
+        <div class="field"><label>Reaction Type</label><input type="text" id="allergy-reaction"
+            placeholder="e.g. rash, anaphylaxis"></div>
+        <div class="field"><label>Severity *</label>
+          <select id="allergy-severity">
+            <option value="mild">Mild</option>
+            <option value="moderate">Moderate</option>
+            <option value="severe">Severe</option>
+          </select>
         </div>
       </div>
-      <div class="pw-strength-wrap" id="pw-strength-wrap" style="display:none">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Password Strength</span>
-          <span class="pw-strength-label" id="pw-strength-label"></span>
-        </div>
-        <div class="pw-strength-track"><div class="pw-strength-fill" id="pw-strength-fill"></div></div>
-        <p style="font-size:11px;color:var(--text3);margin-top:4px">Use 8+ characters with a mix of letters, numbers &amp; symbols.</p>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-allergy">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-allergy">Add</button>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="modal-user">Cancel</button>
-      <button class="btn btn-primary" id="btn-save-user">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:5px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        Create Account
-      </button>
+  </div>
+
+  <!-- Add Vaccination -->
+  <div class="modal-overlay" id="modal-vacc">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Vaccination</h3>
+        <button class="modal-close" data-close="modal-vacc">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>Vaccine Name *</label><input type="text" id="vacc-name"></div>
+        <div class="field"><label>Dose Number</label><input type="number" min="1" id="vacc-dose"></div>
+        <div class="field"><label>Administered At *</label><input type="date" id="vacc-admin"></div>
+        <div class="field"><label>Next Due Date</label><input type="date" id="vacc-next"></div>
+        <div class="field"><label>Notes</label><textarea id="vacc-notes" style="min-height:60px"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-vacc">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-vacc">Add</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Edit Staff Member -->
-<div class="modal-overlay" id="modal-edit-user">
-  <div class="modal modal-lg">
-    <div class="modal-header edit-staff-header" id="edit-staff-header">
-      <div style="display:flex;align-items:center;gap:14px">
-        <div class="edit-staff-avatar" id="edit-staff-av"></div>
+  <!-- Add New Staff Member -->
+  <div class="modal-overlay" id="modal-user">
+    <div class="modal modal-lg">
+      <div class="modal-header">
         <div>
-          <h3 style="margin:0">Edit Staff Member</h3>
-          <p class="edit-staff-meta" id="edit-staff-meta"></p>
+          <h3>Add New Staff Member</h3>
+          <p style="font-size:13px;color:var(--text3);margin-top:2px">Fill in the details to create a new system user
+            account.</p>
+        </div>
+        <button class="modal-close" data-close="modal-user">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field"><label>First Name *</label><input type="text" id="user-fname" placeholder="e.g. Jonathan">
+          </div>
+          <div class="field"><label>Last Name *</label><input type="text" id="user-lname" placeholder="e.g. Smith">
+          </div>
+          <div class="field">
+            <label>Username *</label>
+            <div class="input-prefix-wrap"><span class="input-prefix">@</span><input type="text" id="user-username"
+                placeholder="jsmith_admin"></div>
+          </div>
+          <div class="field"><label>Email *</label><input type="email" id="user-email"
+              placeholder="j.smith@pdms.hospital"></div>
+        </div>
+        <div class="field" style="margin-top:4px">
+          <label>Role *</label>
+          <select id="user-role" class="role-select"></select>
+          <div class="role-pills" id="role-pills"></div>
+        </div>
+        <div class="form-grid" style="margin-top:4px">
+          <div class="field">
+            <label>Password *</label>
+            <div class="input-eye-wrap">
+              <input type="password" id="user-password" placeholder="••••••••" autocomplete="new-password">
+              <button type="button" class="eye-btn" id="btn-toggle-pw">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Confirm Password *</label>
+            <input type="password" id="user-password-confirm" placeholder="••••••••" autocomplete="new-password">
+          </div>
+        </div>
+        <div class="pw-strength-wrap" id="pw-strength-wrap" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span
+              style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em">Password
+              Strength</span>
+            <span class="pw-strength-label" id="pw-strength-label"></span>
+          </div>
+          <div class="pw-strength-track">
+            <div class="pw-strength-fill" id="pw-strength-fill"></div>
+          </div>
+          <p style="font-size:11px;color:var(--text3);margin-top:4px">Use 8+ characters with a mix of letters, numbers
+            &amp; symbols.</p>
         </div>
       </div>
-      <button class="modal-close" data-close="modal-edit-user">×</button>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-user">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-user">Create Account</button>
+      </div>
     </div>
-    <div class="modal-body">
-      <input type="hidden" id="edit-user-id">
+  </div>
 
-      <div class="edit-section-label">PERSONAL INFORMATION</div>
-      <div class="form-grid">
-        <div class="field"><label>FIRST NAME</label><input type="text"  id="edit-fname"></div>
-        <div class="field"><label>LAST NAME</label><input type="text"   id="edit-lname"></div>
-        <div class="field">
-          <label>USERNAME</label>
-          <div class="input-prefix-wrap"><span class="input-prefix">@</span><input type="text" id="edit-username" readonly style="background:var(--surface2);color:var(--text3)"></div>
-        </div>
-        <div class="field"><label>EMAIL ADDRESS</label><input type="email" id="edit-email"></div>
-      </div>
-
-      <div class="edit-section-label" style="margin-top:20px">ROLE &amp; PERMISSIONS</div>
-      <div class="field">
-        <select id="edit-role" class="role-select"></select>
-        <div class="edit-role-info" id="edit-role-info"></div>
-      </div>
-
-      <div class="edit-section-label" style="margin-top:20px">
-        SECURITY
-        <span class="edit-section-hint">Leave blank to keep current password</span>
-      </div>
-      <div class="form-grid">
-        <div class="field">
-          <label>New Password</label>
-          <div class="input-eye-wrap">
-            <input type="password" id="edit-password" placeholder="••••••••" autocomplete="new-password">
-            <button type="button" class="eye-btn" id="btn-toggle-edit-pw">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="field">
-          <label>Confirm New Password</label>
-          <input type="password" id="edit-confirm-pw" placeholder="••••••••" autocomplete="new-password">
-        </div>
-      </div>
-
-      <div class="edit-status-box" id="edit-status-box">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="edit-status-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          </div>
+  <!-- Edit Staff Member -->
+  <div class="modal-overlay" id="modal-edit-user">
+    <div class="modal modal-lg">
+      <div class="modal-header edit-staff-header" id="edit-staff-header">
+        <div style="display:flex;align-items:center;gap:14px">
+          <div class="edit-staff-avatar" id="edit-staff-av"></div>
           <div>
-            <div class="edit-status-title" id="edit-status-title">Active Account</div>
-            <div class="edit-status-sub" id="edit-status-sub"></div>
+            <h3 style="margin:0">Edit Staff Member</h3>
+            <p class="edit-staff-meta" id="edit-staff-meta"></p>
           </div>
         </div>
-        <label class="toggle-sw">
-          <input type="checkbox" id="edit-is-active">
-          <span class="toggle-track"><span class="toggle-thumb"></span></span>
-        </label>
+        <button class="modal-close" data-close="modal-edit-user">×</button>
       </div>
-    </div>
-    <div class="modal-footer" style="justify-content:space-between">
-      <button class="btn-deactivate" id="btn-deactivate-staff">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/></svg>
-        Deactivate Staff
-      </button>
-      <div style="display:flex;gap:10px">
-        <button class="btn btn-secondary" data-close="modal-edit-user">Cancel</button>
-        <button class="btn btn-primary" id="btn-save-edit-user">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-2px;margin-right:5px"><polyline points="20 6 9 17 4 12"/></svg>
-          Save Changes
+      <div class="modal-body">
+        <input type="hidden" id="edit-user-id">
+        <div class="edit-section-label">Personal Information</div>
+        <div class="form-grid">
+          <div class="field"><label>First Name</label><input type="text" id="edit-fname"></div>
+          <div class="field"><label>Last Name</label><input type="text" id="edit-lname"></div>
+          <div class="field">
+            <label>Username</label>
+            <div class="input-prefix-wrap"><span class="input-prefix">@</span><input type="text" id="edit-username"
+                readonly style="background:var(--surface2);color:var(--text3)"></div>
+          </div>
+          <div class="field"><label>Email Address</label><input type="email" id="edit-email"></div>
+        </div>
+        <div class="edit-section-label" style="margin-top:20px">Role &amp; Permissions</div>
+        <div class="field">
+          <select id="edit-role" class="role-select"></select>
+          <div class="edit-role-info" id="edit-role-info"></div>
+        </div>
+        <div class="edit-section-label" style="margin-top:20px">
+          Security
+          <span class="edit-section-hint">Leave blank to keep current password</span>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>New Password</label>
+            <div class="input-eye-wrap">
+              <input type="password" id="edit-password" placeholder="••••••••" autocomplete="new-password">
+              <button type="button" class="eye-btn" id="btn-toggle-edit-pw">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Confirm New Password</label>
+            <input type="password" id="edit-confirm-pw" placeholder="••••••••" autocomplete="new-password">
+          </div>
+        </div>
+        <div class="edit-status-box" id="edit-status-box">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="edit-status-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <div>
+              <div class="edit-status-title" id="edit-status-title">Active Account</div>
+              <div class="edit-status-sub" id="edit-status-sub"></div>
+            </div>
+          </div>
+          <label class="toggle-sw">
+            <input type="checkbox" id="edit-is-active">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:space-between">
+        <button class="btn-deactivate" id="btn-deactivate-staff">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="vertical-align:-2px;margin-right:4px">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <line x1="17" y1="8" x2="23" y2="14" />
+            <line x1="23" y1="8" x2="17" y2="14" />
+          </svg>
+          Deactivate Staff
         </button>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary" data-close="modal-edit-user">Cancel</button>
+          <button class="btn btn-primary" id="btn-save-edit-user">Save Changes</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Submit Lab Results -->
-<div class="modal-overlay" id="modal-lab-result">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <h3>Submit Lab Results</h3>
-      <button class="modal-close" data-close="modal-lab-result">×</button>
-    </div>
-    <div class="modal-body">
-      <div id="lab-result-form"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="modal-lab-result">Cancel</button>
-      <button class="btn btn-primary"   id="btn-submit-lab-result">Submit Results</button>
-    </div>
-  </div>
-</div>
-
-<!-- View Lab Results -->
-<div class="modal-overlay" id="modal-view-results">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <h3 id="view-results-title">Lab Results</h3>
-      <button class="modal-close" data-close="modal-view-results">×</button>
-    </div>
-    <div class="modal-body">
-      <div id="view-results-body"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="modal-view-results">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Care Plan -->
-<div class="modal-overlay" id="modal-care-plan">
-  <div class="modal modal-lg">
-    <div class="modal-header">
-      <h3 id="modal-cp-title">New Care Plan</h3>
-      <button class="modal-close" data-close="modal-care-plan">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="field"><label>Patient ID *</label><input type="text" id="cp-patient-id" placeholder="Patient UUID"></div>
-      <div class="field"><label>Condition *</label><input type="text"  id="cp-condition"></div>
-      <div class="field"><label>Goals *</label><textarea id="cp-goals" style="min-height:70px"></textarea></div>
-      <div class="field"><label>Interventions *</label><textarea id="cp-interventions" style="min-height:70px"></textarea></div>
-      <div class="two-col">
-        <div class="field"><label>Start Date *</label><input type="date"  id="cp-start"></div>
-        <div class="field"><label>Review Date *</label><input type="date" id="cp-review"></div>
+  <!-- Submit Lab Results -->
+  <div class="modal-overlay" id="modal-lab-result">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>Submit Lab Results</h3>
+        <button class="modal-close" data-close="modal-lab-result">×</button>
       </div>
-      <div class="field"><label>Notes</label><textarea id="cp-notes" style="min-height:60px"></textarea></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" data-close="modal-care-plan">Cancel</button>
-      <button class="btn btn-primary"   id="btn-save-care-plan">Save</button>
+      <div class="modal-body">
+        <div id="lab-result-form"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-lab-result">Cancel</button>
+        <button class="btn btn-primary" id="btn-submit-lab-result">Submit Results</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     SCRIPTS — load in dependency order (all share global scope)
+  <!-- View Lab Results -->
+  <div class="modal-overlay" id="modal-view-results">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 id="view-results-title">Lab Results</h3>
+        <button class="modal-close" data-close="modal-view-results">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="view-results-body"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-view-results">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Care Plan -->
+  <div class="modal-overlay" id="modal-care-plan">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-cp-title">New Care Plan</h3>
+        <button class="modal-close" data-close="modal-care-plan">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field"><label>Patient ID *</label><input type="text" id="cp-patient-id" placeholder="Patient UUID">
+        </div>
+        <div class="field"><label>Condition *</label><input type="text" id="cp-condition"></div>
+        <div class="field"><label>Goals *</label><textarea id="cp-goals" style="min-height:70px"></textarea></div>
+        <div class="field"><label>Interventions *</label><textarea id="cp-interventions"
+            style="min-height:70px"></textarea></div>
+        <div class="two-col">
+          <div class="field"><label>Start Date *</label><input type="date" id="cp-start"></div>
+          <div class="field"><label>Review Date *</label><input type="date" id="cp-review"></div>
+        </div>
+        <div class="field"><label>Notes</label><textarea id="cp-notes" style="min-height:60px"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-close="modal-care-plan">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-care-plan">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+     SCRIPTS — load in dependency order
      ═══════════════════════════════════════════════════════════ -->
-<script src="js/config.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/api.js"></script>
-<script src="js/nav.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/dashboard.js"></script>
-<script src="js/patients.js"></script>
-<script src="js/encounters.js"></script>
-<script src="js/prescriptions.js"></script>
-<script src="js/lab.js"></script>
-<script src="js/imaging.js"></script>
-<script src="js/referrals.js"></script>
-<script src="js/appointments.js"></script>
-<script src="js/users.js"></script>
-<script src="js/audit.js"></script>
-<script src="js/care_plans.js"></script>
-<!-- app.js must be last — wires all events and triggers auto-login -->
-<script src="js/app.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/patients.js"></script>
+  <script src="js/encounters.js"></script>
+  <script src="js/prescriptions.js"></script>
+  <script src="js/lab.js"></script>
+  <script src="js/imaging.js"></script>
+  <script src="js/referrals.js"></script>
+  <script src="js/appointments.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/audit.js"></script>
+  <script src="js/care_plans.js"></script>
+  <!-- app.js must be last -->
+  <script src="js/app.js"></script>
 
 </body>
+
 </html>
