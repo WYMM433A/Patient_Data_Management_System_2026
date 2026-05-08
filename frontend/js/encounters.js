@@ -72,16 +72,81 @@ async function openEncounterPage(encId, patientId) {
 
 async function loadEncTab(tab, encId, patientId) {
   if (tab === "soap") {
-    const soap = await api(`/encounters/${encId}/soap`);
+    const [soap, encData] = await Promise.all([
+      api(`/encounters/${encId}/soap`),
+      api(`/encounters/${encId}`)
+    ]);
+
     if (soap) {
       document.getElementById("soap-s").value = soap.subjective || "";
       document.getElementById("soap-o").value = soap.objective  || "";
       document.getElementById("soap-a").value = soap.assessment || "";
       document.getElementById("soap-p").value = soap.plan       || "";
     }
+
     ["soap-s","soap-o","soap-a","soap-p"].forEach(id => {
       document.getElementById(id).disabled = !_encIsOpen;
     });
+
+    // Wire up AI Draft button
+    const aiDraftBtn = document.getElementById("btn-ai-draft");
+    const aiCCWrap   = document.getElementById("ai-cc-wrap");
+
+    if (aiDraftBtn) {
+      const show = (_encIsOpen && _currentUser?.role === "doctor");
+      aiDraftBtn.style.display = show ? "" : "none";
+
+      if (aiCCWrap) {
+        aiCCWrap.style.display = show ? "" : "none";
+        const ccInput = document.getElementById("ai-chief-complaint");
+        if (ccInput && encData?.chief_complaint) {
+          ccInput.value = encData.chief_complaint;
+        }
+      }
+
+      // Remove old listener before adding new one to avoid duplicates
+      const newBtn = aiDraftBtn.cloneNode(true);
+      aiDraftBtn.parentNode.replaceChild(newBtn, aiDraftBtn);
+      newBtn.style.display = show ? "" : "none";
+      newBtn.onclick = () => generateSOAPDraft(_currentEncounterId, _currentPatientId);
+    }
+
+    // Wire up Save SOAP button
+    const saveBtn = document.getElementById("btn-save-soap");
+    if (saveBtn) {
+      const newSaveBtn = saveBtn.cloneNode(true);
+      saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+      newSaveBtn.onclick = async () => {
+        const body = {
+          subjective: document.getElementById("soap-s").value,
+          objective:  document.getElementById("soap-o").value,
+          assessment: document.getElementById("soap-a").value,
+          plan:       document.getElementById("soap-p").value
+        };
+        const r = await api(`/encounters/${encId}/soap`, {
+          method: "PATCH", body: JSON.stringify(body)
+        });
+
+        if (r) toast("SOAP note saved", "success");
+      };
+    }
+
+    // Wire up Close Encounter button
+    const closeBtn = document.getElementById("btn-close-enc");
+    if (closeBtn) {
+      const newCloseBtn = closeBtn.cloneNode(true);
+      closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+      newCloseBtn.style.display = (_encIsOpen && _currentUser?.role === "doctor") ? "" : "none";
+      newCloseBtn.onclick = async () => {
+        if (!confirm("Close this encounter? This cannot be undone.")) return;
+        const r = await api(`/encounters/${_currentEncounterId}/close`, { method: "POST" });
+        if (r) {
+          toast("Encounter closed", "success");
+          _encIsOpen = false;
+          openEncounterPage(_currentEncounterId, _currentPatientId);
+        }
+      };
+    }
   }
   else if (tab === "vitals")        await loadVitals(encId);
   else if (tab === "diagnoses")     await loadDiagnoses(encId);
@@ -90,6 +155,7 @@ async function loadEncTab(tab, encId, patientId) {
   else if (tab === "imaging")       await loadImaging(encId);
   else if (tab === "referrals")     await loadReferrals(encId);
 }
+
 
 // SOAP save
 document.getElementById("btn-save-soap").addEventListener("click", async () => {
@@ -190,6 +256,15 @@ function buildDxForm(encId, canAdd) {
   const w = document.getElementById("dx-form-wrap");
   if (!canAdd || !_encIsOpen) { w.innerHTML = ""; return; }
   w.innerHTML = `
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title" style="margin-bottom:8px">✨ AI ICD Suggest</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="ai-symptom-input" placeholder="Describe symptoms e.g. chest pain and shortness of breath"
+          style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px">
+        <button class="btn btn-secondary btn-sm" onclick="suggestICD('${encId}')">✨ Suggest ICD</button>
+      </div>
+      <div id="ai-icd-results" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
     <div class="card">
       <div class="card-title" style="margin-bottom:12px">Add Diagnosis</div>
       <div class="form-grid">
@@ -213,6 +288,7 @@ function buildDxForm(encId, canAdd) {
       </div>
     </div>`;
 }
+
 
 async function saveDiagnosis(encId) {
   const body = {
@@ -250,4 +326,152 @@ async function deleteDiagnosis(encId, dId) {
   if (!confirm("Remove this diagnosis?")) return;
   await api(`/encounters/${encId}/diagnoses/${dId}`, { method: "DELETE" });
   loadDiagnoses(encId);
+}
+
+
+// ── AI: ICD Suggest ─────────────────────────────────────────
+
+async function suggestICD(encId) {
+  const input = document.getElementById("ai-symptom-input");
+  const resultsDiv = document.getElementById("ai-icd-results");
+  const text = input?.value?.trim();
+
+  if (!text) { toast("Please describe the symptoms first", "error"); return; }
+
+  resultsDiv.innerHTML = `<div class="spinner" style="width:18px;height:18px"></div>`;
+
+  try {
+    const result = await api("/ai/icd-suggest", {
+      method: "POST",
+      body: JSON.stringify({ text })
+    });
+
+    if (!result?.codes?.length) {
+      resultsDiv.innerHTML = `<span style="font-size:12px;color:var(--text3)">No suggestions found</span>`;
+      return;
+    }
+
+    resultsDiv.innerHTML = result.codes.map(c => `
+      <div onclick="applyICDSuggestion('${c.code}', '${c.description.replace(/'/g, "&#39;")}')"
+        style="
+          cursor:pointer;
+          padding:6px 10px;
+          border:1px solid var(--border);
+          border-radius:var(--radius-sm);
+          background:var(--surface);
+          font-size:12px;
+          display:flex;
+          align-items:center;
+          gap:6px;
+          transition:background 0.15s;
+        "
+        onmouseover="this.style.background='var(--primary-light, #eff6ff)'"
+        onmouseout="this.style.background='var(--surface)'"
+      >
+        <span class="badge badge-blue" style="font-size:11px">${c.code}</span>
+        <span style="color:var(--text2)">${c.description}</span>
+        ${c.confidence ? `<span style="color:var(--text3);margin-left:auto">${Math.round(c.confidence * 100)}%</span>` : ""}
+      </div>
+    `).join("");
+
+    if (result.disclaimer) {
+      resultsDiv.innerHTML += `
+        <p style="font-size:11px;color:var(--text3);margin-top:4px;width:100%">
+          ⚠️ ${result.disclaimer}
+        </p>`;
+    }
+
+  } catch (e) {
+    resultsDiv.innerHTML = `<span style="font-size:12px;color:var(--danger)">AI service unavailable</span>`;
+    toast("AI service unavailable", "error");
+  }
+}
+
+function applyICDSuggestion(code, description) {
+  const icdInput  = document.getElementById("dx-icd");
+  const descInput = document.getElementById("dx-desc");
+  if (icdInput)  icdInput.value  = code;
+  if (descInput) descInput.value = description;
+  // Clear suggestions after selection
+  const resultsDiv = document.getElementById("ai-icd-results");
+  if (resultsDiv) resultsDiv.innerHTML = `
+    <span style="font-size:12px;color:var(--text3)">
+      ✓ Applied: <strong>${code}</strong> — ${description}
+    </span>`;
+  toast(`ICD ${code} applied`, "success");
+}
+
+
+// ── AI: SOAP Draft ───────────────────────────────────────────
+
+async function generateSOAPDraft(encId, patientId) {
+  const btn = document.getElementById("btn-ai-draft");
+  if (btn) { btn.disabled = true; btn.textContent = "Generating…"; }
+
+  try {
+    // Gather all data in parallel
+    const [enc, vitalsData, allergiesData, historyData] = await Promise.all([
+      api(`/encounters/${encId}`),
+      api(`/encounters/${encId}/vitals`),
+      api(`/patients/${patientId}/allergies`),
+      api(`/patients/${patientId}/medical-history`)
+    ]);
+
+    // Build vitals object from most recent vitals entry
+    let vitals = null;
+    if (vitalsData?.length) {
+      const latest = vitalsData[0];
+      vitals = {};
+      if (latest.blood_pressure_sys)  vitals.systolic_bp        = latest.blood_pressure_sys;
+      if (latest.blood_pressure_dia)  vitals.diastolic_bp       = latest.blood_pressure_dia;
+      if (latest.heart_rate)          vitals.heart_rate         = latest.heart_rate;
+      if (latest.temperature)         vitals.temperature        = latest.temperature;
+      if (latest.oxygen_saturation)   vitals.oxygen_saturation  = latest.oxygen_saturation;
+      if (latest.respiratory_rate)    vitals.respiratory_rate   = latest.respiratory_rate;
+      if (latest.weight_kg)           vitals.weight             = latest.weight_kg;
+      if (latest.height_cm)           vitals.height             = latest.height_cm;
+    }
+
+    // Build allergies list
+    const allergies = (allergiesData || [])
+      .filter(a => !a.is_removed)
+      .map(a => a.allergen);
+
+    // Build medical history list
+    const medical_history = (historyData || [])
+      .filter(h => !h.is_removed)
+      .map(h => h.condition_name);
+
+    const chiefComplaint = document.getElementById("ai-chief-complaint")?.value?.trim()
+  || enc?.chief_complaint
+  || "Not specified";
+
+    const body = {
+      chief_complaint: chiefComplaint,
+      vitals,
+      allergies,
+      medical_history
+    };
+
+
+    const result = await api("/ai/soap-draft", {
+      method: "POST",
+      body: JSON.stringify(body)
+    });
+
+    if (!result) { toast("AI returned no response", "error"); return; }
+
+    // Fill in the SOAP textareas
+    if (result.subjective) document.getElementById("soap-s").value = result.subjective;
+    if (result.objective)  document.getElementById("soap-o").value = result.objective;
+    if (result.assessment) document.getElementById("soap-a").value = result.assessment;
+    if (result.plan)       document.getElementById("soap-p").value = result.plan;
+
+    toast("SOAP draft generated — please review before saving", "success");
+
+  } catch (e) {
+    toast("AI service unavailable", "error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "✨ AI Draft"; }
+  }
 }

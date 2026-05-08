@@ -95,6 +95,27 @@ class AllergyOut(BaseModel):
 
 # ---------- Vaccination ----------
 
+# ---------- Vitals Trend ----------
+
+from datetime import datetime
+
+class VitalsTrendOut(BaseModel):
+    vital_id: UUID
+    encounter_id: UUID
+    recorded_at: datetime
+    blood_pressure_sys: Optional[int] = None
+    blood_pressure_dia: Optional[int] = None
+    heart_rate: Optional[int] = None
+    temperature: Optional[float] = None
+    weight_kg: Optional[float] = None
+    height_cm: Optional[float] = None
+    oxygen_saturation: Optional[int] = None
+    respiratory_rate: Optional[int] = None
+    bmi: Optional[float] = None
+    is_abnormal: bool
+
+    model_config = {"from_attributes": True}
+
 class VaccinationCreate(BaseModel):
     vaccine_name:    str
     dose_number:     Optional[int]  = None

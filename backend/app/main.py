@@ -6,7 +6,7 @@ from jose import jwt, JWTError
 
 from app.database import get_db, _current_user_id
 from app.config import settings
-from app.routers import auth, users, patients, prescriptions, appointments, encounters, lab, imaging, referrals, care_plans, audit_logs
+from app.routers import auth, users, patients, prescriptions, appointments, encounters, lab, imaging, referrals, care_plans, audit_logs, ai
 
 app = FastAPI(
     title="PDMS - Patient Data Management System",
@@ -57,6 +57,7 @@ app.include_router(imaging.router)
 app.include_router(referrals.router)
 app.include_router(care_plans.router)
 app.include_router(audit_logs.router)
+app.include_router(ai.router)
 
 
 @app.get("/health")

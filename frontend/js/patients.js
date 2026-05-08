@@ -40,7 +40,10 @@ async function openPatientProfile(patientId) {
 
   const patient = await api(`/patients/${patientId}`);
   if (!patient) return;
-  const role = _currentUser?.role || "";
+  const role    = _currentUser?.role || "";
+  const isDr    = role === "doctor";
+  const isNurse = role === "nurse";
+  const isReceptionist = role === "receptionist";
 
   // Patient header
   const initials = (patient.first_name?.[0] || "") + (patient.last_name?.[0] || "");
@@ -71,27 +74,27 @@ async function openPatientProfile(patientId) {
     </div>
     <div class="card">
       <div class="card-title" style="margin-bottom:12px">Quick Actions</div>
-      ${role === "receptionist"
+      ${isReceptionist
         ? `<button class="btn btn-secondary btn-sm" onclick="openApptForPatient('${patientId}')">+ Book Appointment</button>`
-        : "<span style='font-size:12px;color:var(--text3)'>Start encounters from the Appointments page.</span>"}
+        : `<div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:12px;color:var(--text3)">Start encounters from the Appointments page.</span>
+            ${isDr ? `<button class="btn btn-secondary btn-sm" style="margin-top:4px" onclick="generatePatientSummary()">🤖 AI Patient Summary</button>` : ""}
+           </div>`}
     </div>`;
 
   // Show/hide clinical tabs
-  const isReceptionist = role === "receptionist";
-  document.getElementById("tab-encounters").style.display    = ["doctor","nurse"].includes(role) ? "" : "none";
-  document.getElementById("tab-history").style.display       = isReceptionist ? "none" : "";
-  document.getElementById("tab-allergies").style.display     = isReceptionist ? "none" : "";
-  document.getElementById("tab-vaccinations").style.display  = isReceptionist ? "none" : "";
+  document.getElementById("tab-encounters").style.display   = ["doctor","nurse"].includes(role) ? "" : "none";
+  document.getElementById("tab-history").style.display      = isReceptionist ? "none" : "";
+  document.getElementById("tab-allergies").style.display    = isReceptionist ? "none" : "";
+  document.getElementById("tab-vaccinations").style.display = isReceptionist ? "none" : "";
 
   // Role-based action buttons inside tabs
-  const isDr    = role === "doctor";
-  const isNurse = role === "nurse";
-  document.getElementById("hist-actions").innerHTML    = isDr    ? `<button class="btn btn-secondary btn-sm" onclick="openModal('modal-history')">+ Add</button>` : "";
-  document.getElementById("allergy-actions").innerHTML = isDr    ? `<button class="btn btn-secondary btn-sm" onclick="openModal('modal-allergy')">+ Add</button>` : "";
+  document.getElementById("hist-actions").innerHTML    = isDr ? `<button class="btn btn-secondary btn-sm" onclick="openModal('modal-history')">+ Add</button>` : "";
+  document.getElementById("allergy-actions").innerHTML = isDr ? `<button class="btn btn-secondary btn-sm" onclick="openModal('modal-allergy')">+ Add</button>` : "";
   document.getElementById("vacc-actions").innerHTML    = (isDr || isNurse) ? `<button class="btn btn-secondary btn-sm" onclick="openModal('modal-vacc')">+ Add</button>` : "";
-  document.getElementById("enc-actions").innerHTML     = ""; // Encounters started from Appointments page only
+  document.getElementById("enc-actions").innerHTML     = "";
 
-  // Load clinical sub-tabs (not for receptionist)
+  // Load clinical sub-tabs
   if (!isReceptionist) {
     loadMedHistory(patientId);
     loadAllergies(patientId);
@@ -106,10 +109,102 @@ async function openPatientProfile(patientId) {
       t.classList.add("active");
       document.querySelectorAll(".tab-panel[id^=prof-]").forEach(p => p.classList.remove("active"));
       document.getElementById(t.dataset.tab).classList.add("active");
+      if (t.dataset.tab === "prof-vitals-trend") loadVitalsTrend(patientId);
     };
   });
+
   // Reset to first tab
   document.querySelector("#profile-tabs .tab").click();
+}
+// Vitals Trends
+async function loadVitalsTrend(pid) {
+  const data = await api(`/patients/${pid}/vitals/trends`);
+  
+  // 1. TABLE: Keep all columns, show newest records at the top
+  const tableData = data ? [...data] : [];
+  document.getElementById("vitals-trend-tbody").innerHTML = !tableData.length
+    ? `<tr><td colspan="10"><div class="empty">No vitals recorded</div></td></tr>`
+    : tableData.map(v => `<tr>
+        <td>${formatDateTime(v.recorded_at)}</td>
+        <td>${v.blood_pressure_sys || "—"}/${v.blood_pressure_dia || "—"}</td>
+        <td>${v.heart_rate || "—"}</td>
+        <td>${v.temperature || "—"}</td>
+        <td>${v.weight_kg || "—"}</td>
+        <td>${v.height_cm || "—"}</td>
+        <td>${v.bmi || "—"}</td>
+        <td>${v.oxygen_saturation || "—"}</td>
+        <td>${v.respiratory_rate || "—"}</td>
+        <td>${v.is_abnormal ? "⚠️" : ""}</td>
+      </tr>`).join("");
+
+  // 2. CHART: Sort chronologically and pass to the render function
+  const chartData = [...tableData].sort((a, b) => new Date(a.recorded_at) - new Date(b.recorded_at));
+  renderVitalsChart(chartData);
+}
+
+function renderVitalsChart(data) {
+  if (!window.Chart) return;
+  const ctx = document.getElementById('vitals-trend-chart').getContext('2d');
+  if (window._vitalsChart) window._vitalsChart.destroy();
+
+  window._vitalsChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map(v => formatDateTime(v.recorded_at)),
+      datasets: [
+        { 
+          label: 'BP Sys', 
+          data: data.map(v => v.blood_pressure_sys), 
+          borderColor: '#ef4444', 
+          backgroundColor: '#ef444411',
+          fill: true,
+          tension: 0.3 
+        },
+        { 
+          label: 'BP Dia', 
+          data: data.map(v => v.blood_pressure_dia), 
+          borderColor: '#f87171', 
+          tension: 0.3 
+        },
+        { 
+          label: 'HR', 
+          data: data.map(v => v.heart_rate), 
+          borderColor: '#3b82f6', 
+          tension: 0.3 
+        },
+        { 
+          label: 'Weight (kg)', 
+          data: data.map(v => v.weight_kg), 
+          borderColor: '#10b981', 
+          borderWidth: 3,
+          tension: 0.3
+        },
+        { 
+          label: 'SpO₂', 
+          data: data.map(v => v.oxygen_saturation), 
+          borderColor: '#06b6d4', 
+          borderDash: [5, 5],
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true } }
+      },
+      scales: {
+        y: { 
+          beginAtZero: false, 
+          suggestedMin: 40,
+          grid: { color: '#f3f4f6' }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
 }
 
 async function loadMedHistory(pid) {
@@ -178,4 +273,77 @@ async function deleteAllergy(pid, aid) {
   if (!confirm("Remove this allergy?")) return;
   await api(`/patients/${pid}/allergies/${aid}`, { method: "DELETE" });
   loadAllergies(pid);
+}
+
+async function generatePatientSummary() {
+  const patientId = _currentPatientId;
+  if (!patientId) return;
+
+  // Show the overlay with spinner
+  document.getElementById("ai-summary-overlay").style.display = "flex";
+  document.getElementById("ai-summary-content").innerHTML = 
+    `<div class="spinner"></div>`;
+
+  try {
+    // Fetch all patient data in parallel
+    const [patient, history, allergies, vaccinations, encounters] = await Promise.all([
+      api(`/patients/${patientId}`),
+      api(`/patients/${patientId}/medical-history`),
+      api(`/patients/${patientId}/allergies`),
+      api(`/patients/${patientId}/vaccinations`),
+      api(`/encounters?patient_id=${patientId}&skip=0&limit=5`)
+    ]);
+
+    // Build summary prompt text
+    const age = patient.date_of_birth
+      ? Math.floor((new Date() - new Date(patient.date_of_birth)) / 31557600000)
+      : "Unknown";
+
+    const historyList = (history || [])
+      .filter(h => !h.is_removed)
+      .map(h => h.condition_name).join(", ") || "None";
+
+    const allergyList = (allergies || [])
+      .filter(a => !a.is_removed)
+      .map(a => `${a.allergen} (${a.severity})`).join(", ") || "NKDA";
+
+    const vaccList = (vaccinations || [])
+      .map(v => v.vaccine_name).join(", ") || "None recorded";
+
+    const recentEncs = (encounters || []).slice(0, 3)
+      .map(e => `${e.encounter_date?.split("T")[0]}: ${e.chief_complaint || "No complaint recorded"} (${e.status})`)
+      .join("\n") || "No recent encounters";
+
+    // Call AI
+    const response = await fetch("http://localhost:8000/ai/patient-summary", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("access_token")}`
+      },
+      body: JSON.stringify({
+        patient_name: `${patient.first_name} ${patient.last_name}`,
+        age,
+        gender: patient.gender || "Unknown",
+        blood_type: patient.blood_type || "Unknown",
+        medical_history: historyList,
+        allergies: allergyList,
+        vaccinations: vaccList,
+        recent_encounters: recentEncs
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || "AI error");
+
+    document.getElementById("ai-summary-content").textContent = data.summary;
+
+  } catch (e) {
+    document.getElementById("ai-summary-content").innerHTML =
+      `<span style="color:var(--danger)">Failed to generate summary. Please try again.</span>`;
+  }
+}
+
+function closeAISummary() {
+  document.getElementById("ai-summary-overlay").style.display = "none";
 }

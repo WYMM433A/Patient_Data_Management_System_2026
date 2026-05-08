@@ -135,5 +135,5 @@ class LabResultOut(BaseModel):
     resulted_at:     datetime
     validated_at:    Optional[datetime]
     validated_by:    Optional[UUID]
-
     model_config = {"from_attributes": True}
+    

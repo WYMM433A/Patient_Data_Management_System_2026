@@ -1,3 +1,6 @@
+# ---------- Lab Trends ----------
+
+from app.services import lab_service
 from uuid import UUID
 from typing import List, Optional
 
@@ -89,7 +92,19 @@ def remove_medical_history(
     return patient_service.remove_medical_history(db, patient_id, history_id)
 
 
-# ---------- Allergies ----------
+
+
+# ---------- Vitals Trend ----------
+
+from app.schemas.patients import VitalsTrendOut
+
+@router.get("/{patient_id}/vitals/trends", response_model=List[VitalsTrendOut])
+def get_vitals_trend(
+    patient_id: UUID,
+    db: Session = Depends(get_db),
+    _=Depends(require_permission("view_patient_record")),
+):
+    return patient_service.get_vitals_trend(db, patient_id)
 
 @router.get("/{patient_id}/allergies", response_model=List[AllergyOut])
 def list_allergies(
@@ -100,6 +115,7 @@ def list_allergies(
     return patient_service.list_allergies(db, patient_id)
 
 
+# ---------- Allergies ----------
 @router.post("/{patient_id}/allergies", response_model=AllergyOut, status_code=status.HTTP_201_CREATED)
 def add_allergy(
     patient_id: UUID,
@@ -118,6 +134,7 @@ def remove_allergy(
     _=Depends(require_permission("manage_medical_history")),
 ):
     return patient_service.remove_allergy(db, patient_id, allergy_id)
+
 
 
 # ---------- Vaccinations ----------

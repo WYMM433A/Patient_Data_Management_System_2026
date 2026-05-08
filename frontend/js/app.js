@@ -237,6 +237,7 @@ document.getElementById("patient-search").addEventListener("keydown", e => {
   if (e.key === "Enter") loadPatients(e.target.value);
 });
 document.getElementById("btn-back-patients").addEventListener("click", () => {
+  document.getElementById("btn-ai-summary").style.display = "none";
   showPage("patients"); loadPatients();
 });
 document.getElementById("btn-back-enc").addEventListener("click", () => {

@@ -146,6 +146,22 @@ def remove_medical_history(db: Session, patient_id: UUID, history_id: UUID) -> M
 # Allergies
 # -------------------------------------------------------------------
 
+# -------------------------------------------------------------------
+# Vitals Trend
+# -------------------------------------------------------------------
+from app.models.encounter import Vital
+from app.schemas.patients import VitalsTrendOut
+
+def get_vitals_trend(db: Session, patient_id: UUID) -> list[VitalsTrendOut]:
+    _get_patient_or_404(db, patient_id)
+    vitals = (
+        db.query(Vital)
+        .filter(Vital.patient_id == str(patient_id))
+        .order_by(Vital.recorded_at.desc())
+        .all()
+    )
+    return [VitalsTrendOut.model_validate(v) for v in vitals]
+
 def add_allergy(db: Session, patient_id: UUID, payload: AllergyCreate, recorded_by: UUID) -> Allergy:
     _get_patient_or_404(db, patient_id)
     allergy = Allergy(

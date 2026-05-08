@@ -46,6 +46,7 @@ function showPage(id) {
   if (p) p.classList.add("active");
   _currentPage = id;
 
+
   const titles = {
     dashboard:        "Dashboard",
     patients:         "Patients",

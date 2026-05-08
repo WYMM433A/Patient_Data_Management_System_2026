@@ -96,8 +96,12 @@ async function loadLabOrders(encIdOrPage) {
   }
 
   // Lab technician page
-  const status = document.getElementById("lab-status-filter")?.value || "ordered";
-  const data   = await api(`/lab-orders?order_status=${status}&limit=100`);
+  const statusVal = document.getElementById("lab-status-filter")?.value;
+  const status = statusVal !== undefined ? statusVal : "ordered";
+  
+  const url = status ? `/lab-orders?order_status=${status}&limit=100` : `/lab-orders?limit=100`;
+  const data = await api(url);
+
   const tbody  = document.getElementById("lab-tbody");
   if (!tbody) return;
   if (!data?.length) {
