@@ -14,7 +14,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all .15s;
-  font-family: var(--font);
+  font-family: var(--simpletext);
   white-space: nowrap;
   text-decoration: none;
 }
@@ -190,6 +190,7 @@ td {
   padding: 13px 16px;
   border-top: 1px solid #f5f0eb;
   font-size: 13px; color: var(--text);
+  font-family: var(--simpletext);
 }
 tbody tr { transition: background .15s; }
 tbody tr:hover td { background: var(--row-hover); }
@@ -308,7 +309,7 @@ tr.abnormal:hover td { background: var(--row-abnormal-hover); }
   transition: all .15s;
 }
 .modal-close:hover { background: var(--surface2); color: var(--text); }
-.modal-body   { padding: 24px; }
+.modal-body   { padding: 24px; font-family: var(--simpletext);}
 .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
 
 /* ── Tabs ── */
@@ -330,8 +331,8 @@ tr.abnormal:hover td { background: var(--row-abnormal-hover); }
 .tab-panel.active { display: block; }
 
 /* ── MRN tag ── */
-.mrn { font-family: var(--mono); font-size: 12px; color: var(--primary); font-weight: 600; }
-.mrn-link { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--primary); }
+.mrn { font-family: var(--simpletext); font-size: 12px; color: var(--text4); font-weight: 600; }
+.mrn-link { font-family: var(--heading); font-size: 12px; font-weight: 600; color: var(--text4); }
 
 /* ── Empty state ── */
 .empty { text-align: center; padding: 48px; color: var(--text3); }
