@@ -1093,18 +1093,24 @@
         <button class="modal-close" data-close="modal-care-plan">×</button>
       </div>
       <div class="modal-body">
-        <div class="field"><label>Patient ID *</label><input type="text" id="cp-patient-id" placeholder="Patient UUID">
+        <div class="field">
+          <label>Patient *</label>
+          <input type="text" id="cp-patient-search" placeholder="Search patient…">
+          <div id="cp-patient-results"
+            style="border:1px solid var(--border);border-radius:var(--radius-sm);display:none;max-height:160px;overflow-y:auto;">
+          </div>
+          <input type="hidden" id="cp-patient-id">
         </div>
         <div class="field"><label>Condition *</label><input type="text" id="cp-condition"></div>
         <div class="field"><label>Goals *</label><textarea id="cp-goals" style="min-height:70px"></textarea></div>
-        <div class="field"><label>Interventions *</label><textarea id="cp-interventions"
-            style="min-height:70px"></textarea></div>
+        <div class="field"><label>Interventions *</label><textarea id="cp-interventions" style="min-height:70px"></textarea></div>
         <div class="two-col">
           <div class="field"><label>Start Date *</label><input type="date" id="cp-start"></div>
           <div class="field"><label>Review Date *</label><input type="date" id="cp-review"></div>
         </div>
         <div class="field"><label>Notes</label><textarea id="cp-notes" style="min-height:60px"></textarea></div>
       </div>
+
       <div class="modal-footer">
         <button class="btn btn-secondary" data-close="modal-care-plan">Cancel</button>
         <button class="btn btn-primary" id="btn-save-care-plan">Save</button>

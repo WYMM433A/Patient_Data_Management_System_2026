@@ -11,7 +11,7 @@ async function loadCarePlans() {
     return;
   }
   tbody.innerHTML = data.map(p => `<tr>
-    <td style="font-size:11px">${p.patient_id?.slice(0, 8)}…</td>
+    <td style="font-size:11px">${p.patient_name || p.patient_id?.slice(0, 8) + '…'}</td>
     <td>${p.condition}</td>
     <td><span class="badge ${p.status === "active" ? "badge-green" : p.status === "completed" ? "badge-blue" : "badge-gray"}">${p.status}</span></td>
     <td>${p.start_date}</td>

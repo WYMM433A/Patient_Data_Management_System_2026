@@ -77,12 +77,18 @@ async function loadEncTab(tab, encId, patientId) {
       api(`/encounters/${encId}`)
     ]);
 
+    document.getElementById("soap-s").value = "";
+    document.getElementById("soap-o").value = "";
+    document.getElementById("soap-a").value = "";
+    document.getElementById("soap-p").value = "";
+
     if (soap) {
       document.getElementById("soap-s").value = soap.subjective || "";
       document.getElementById("soap-o").value = soap.objective  || "";
       document.getElementById("soap-a").value = soap.assessment || "";
       document.getElementById("soap-p").value = soap.plan       || "";
     }
+
 
     ["soap-s","soap-o","soap-a","soap-p"].forEach(id => {
       document.getElementById(id).disabled = !_encIsOpen;
@@ -116,7 +122,9 @@ async function loadEncTab(tab, encId, patientId) {
     if (saveBtn) {
       const newSaveBtn = saveBtn.cloneNode(true);
       saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+      newSaveBtn.style.display = _encIsOpen ? "" : "none";
       newSaveBtn.onclick = async () => {
+
         const body = {
           subjective: document.getElementById("soap-s").value,
           objective:  document.getElementById("soap-o").value,
@@ -157,30 +165,6 @@ async function loadEncTab(tab, encId, patientId) {
 }
 
 
-// SOAP save
-document.getElementById("btn-save-soap").addEventListener("click", async () => {
-  const body = {
-    subjective: document.getElementById("soap-s").value,
-    objective:  document.getElementById("soap-o").value,
-    assessment: document.getElementById("soap-a").value,
-    plan:       document.getElementById("soap-p").value
-  };
-  const r = await api(`/encounters/${_currentEncounterId}/soap`, {
-    method: "PATCH", body: JSON.stringify(body)
-  });
-  if (r) toast("SOAP note saved", "success");
-});
-
-// Close encounter
-document.getElementById("btn-close-enc").addEventListener("click", async () => {
-  if (!confirm("Close this encounter? This cannot be undone.")) return;
-  const r = await api(`/encounters/${_currentEncounterId}/close`, { method: "POST" });
-  if (r) {
-    toast("Encounter closed", "success");
-    _encIsOpen = false;
-    openEncounterPage(_currentEncounterId, _currentPatientId);
-  }
-});
 
 // ── Vitals ──────────────────────────────────────────────────
 
