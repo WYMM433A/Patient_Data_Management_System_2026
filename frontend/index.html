@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PDMS — Clinic Management</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
 
   <!-- Design tokens must load first so every rule can use var(--…) -->
   <link rel="stylesheet" href="css/variables.css">
@@ -18,40 +21,46 @@
 
 <body>
 
-<!-- ── TOAST ── -->
-<div id="toast-container"></div>
+  <!-- ── TOAST ── -->
+  <div id="toast-container"></div>
 
-<!-- ── LOGIN PAGE ── -->
-<div id="page-login" class="active">
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="icon">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-        </svg>
+  <!-- ── LOGIN PAGE ── -->
+  <div id="page-login" class="active">
+    <div class="login-wrapper">
+      <!-- Left side: Logo -->
+      <div class="login-left">
+        <div class="login-title">Patient Data Management System</div>
+        <img src="images/login_logo.png" alt="PDMS Logo" class="login-logo-img">
       </div>
-      <div>
-        <h1>PDMS</h1>
-        <p>Outpatient Clinic System</p>
+
+      <!-- Right side: Form -->
+      <div class="login-right">
+        <div class="login-form-card">
+          <h2 class="login-welcome">Welcome <br> back</h2>
+
+          <div id="login-error" class="alert alert-danger" style="display:none;"></div>
+
+          <div class="login-form-group">
+            <label class="login-label">Username</label>
+            <div class="login-input-wrapper">
+              <input type="text" id="login-username" class="login-input" placeholder="Enter your username"
+                autocomplete="username">
+            </div>
+          </div>
+
+          <div class="login-form-group">
+            <label class="login-label">Password</label>
+            <div class="login-input-wrapper">
+              <input type="password" id="login-password" class="login-input" placeholder="Enter your password"
+                autocomplete="current-password">
+            </div>
+          </div>
+
+          <button class="login-button" id="login-btn">Log in</button>
+        </div>
       </div>
     </div>
-    <h2>Sign in</h2>
-    <p class="sub">Enter your credentials to continue</p>
-    <div id="login-error" class="alert alert-danger" style="display:none"></div>
-    <div class="field">
-      <label>Username</label>
-      <input type="text" id="login-username" placeholder="e.g. dr_smith" autocomplete="username">
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn btn-primary btn-full" id="login-btn">Sign in</button>
-    <p style="margin-top:16px;font-size:12px;color:var(--text3);text-align:center">
-      Outpatient GP Clinic · Secure Access Only
-    </p>
   </div>
-</div>
 
   <!-- ── APP SHELL ── -->
   <div id="app">
@@ -234,7 +243,16 @@
               <table>
                 <thead>
                   <tr>
-                    <th>Date</th><th>BP</th><th>HR</th><th>Temp</th><th>Weight</th><th>Height</th><th>BMI</th><th>SpO₂</th><th>RR</th><th>Abnormal</th>
+                    <th>Date</th>
+                    <th>BP</th>
+                    <th>HR</th>
+                    <th>Temp</th>
+                    <th>Weight</th>
+                    <th>Height</th>
+                    <th>BMI</th>
+                    <th>SpO₂</th>
+                    <th>RR</th>
+                    <th>Abnormal</th>
                   </tr>
                 </thead>
                 <tbody id="vitals-trend-tbody"></tbody>
@@ -1103,7 +1121,8 @@
         </div>
         <div class="field"><label>Condition *</label><input type="text" id="cp-condition"></div>
         <div class="field"><label>Goals *</label><textarea id="cp-goals" style="min-height:70px"></textarea></div>
-        <div class="field"><label>Interventions *</label><textarea id="cp-interventions" style="min-height:70px"></textarea></div>
+        <div class="field"><label>Interventions *</label><textarea id="cp-interventions"
+            style="min-height:70px"></textarea></div>
         <div class="two-col">
           <div class="field"><label>Start Date *</label><input type="date" id="cp-start"></div>
           <div class="field"><label>Review Date *</label><input type="date" id="cp-review"></div>
@@ -1120,20 +1139,20 @@
 
   <!-- AI Patient Summary -->
 
-<div id="ai-summary-overlay" style="display:none">
-  <div id="ai-summary-box">
-    <div id="ai-summary-header">
-      <span>🤖 Patient AI Summary</span>
-      <button onclick="closeAISummary()">✕</button>
-    </div>
-    <div id="ai-summary-disclaimer">
-      ⚠️ AI-generated summary for quick reference only. Always verify with full records.
-    </div>
-    <div id="ai-summary-content">
-      <div class="spinner"></div>
+  <div id="ai-summary-overlay" style="display:none">
+    <div id="ai-summary-box">
+      <div id="ai-summary-header">
+        <span>🤖 Patient AI Summary</span>
+        <button onclick="closeAISummary()">✕</button>
+      </div>
+      <div id="ai-summary-disclaimer">
+        ⚠️ AI-generated summary for quick reference only. Always verify with full records.
+      </div>
+      <div id="ai-summary-content">
+        <div class="spinner"></div>
+      </div>
     </div>
   </div>
-</div>
 
   <!-- ═══════════════════════════════════════════════════════════
      SCRIPTS — load in dependency order
