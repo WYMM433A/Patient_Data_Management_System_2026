@@ -54,8 +54,7 @@ def create_prescription(
             @p_duration        = :duration,
             @p_route           = :route,
             @p_instructions    = :instructions,
-            @p_prescription_id = @new_id OUTPUT,
-            @p_force_override  = :force_override;
+            @p_prescription_id = @new_id OUTPUT;
         SELECT @new_id AS prescription_id;
     """)
 
@@ -70,7 +69,6 @@ def create_prescription(
             "duration":       payload.duration,
             "route":          payload.route,
             "instructions":   payload.instructions,
-            "force_override": 1 if payload.force_override else 0,
         })
         new_id = result.scalar()
         db.commit()

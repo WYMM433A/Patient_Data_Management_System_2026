@@ -210,7 +210,23 @@ document.getElementById("user-search")?.addEventListener("input", function() {
 
 // ── Care Plan modal ───────────────────────────────────────────────
 
-document.getElementById("btn-new-care-plan").addEventListener("click", () => openModal("modal-care-plan"));
+document.getElementById("btn-new-care-plan").addEventListener("click", () => {
+      // Clear all fields
+      ["cp-patient-search", "cp-condition", "cp-goals", 
+      "cp-interventions", "cp-notes"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+      ["cp-start", "cp-review"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+      document.getElementById("cp-patient-id").value = "";
+      document.getElementById("cp-patient-results").style.display = "none";
+      openModal("modal-care-plan");
+    });
+
+
 document.getElementById("btn-save-care-plan").addEventListener("click", async () => {
   const body = {
     patient_id:    document.getElementById("cp-patient-id").value,
@@ -227,6 +243,33 @@ document.getElementById("btn-save-care-plan").addEventListener("click", async ()
   const r = await api("/care-plans", { method: "POST", body: JSON.stringify(body) });
   if (r && !r._conflict) { toast("Care plan created", "success"); closeModal("modal-care-plan"); loadCarePlans(); }
 });
+
+
+// ── Care Plan patient autocomplete ───────────────────────────────
+let _cpSearchTimer;
+document.getElementById("cp-patient-search")?.addEventListener("input", e => {
+  clearTimeout(_cpSearchTimer);
+  _cpSearchTimer = setTimeout(async () => {
+    const res = await api(`/patients?search=${encodeURIComponent(e.target.value)}&limit=10`);
+    const el  = document.getElementById("cp-patient-results");
+    if (!res?.length) { el.style.display = "none"; return; }
+    el.style.display = "block";
+    el.innerHTML = res.map(p =>
+      `<div style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)"
+            onmousedown="selectCPPatient('${p.patient_id}','${p.first_name} ${p.last_name}','${p.mrn}')">
+         ${p.first_name} ${p.last_name}
+         <span class="mrn" style="font-size:11px">${p.mrn}</span>
+       </div>`
+    ).join("");
+  }, 300);
+});
+
+function selectCPPatient(id, name, mrn) {
+  document.getElementById("cp-patient-id").value      = id;
+  document.getElementById("cp-patient-search").value  = `${name} (${mrn})`;
+  document.getElementById("cp-patient-results").style.display = "none";
+}
+
 
 // ── Search & filter event listeners ──────────────────────────────
 

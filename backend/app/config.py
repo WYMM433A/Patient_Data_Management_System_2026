@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     DEBUG: bool = True
+    
+    # AI / Gemini
+    AI_PROVIDER: str = "gemini"
+    GEMINI_API_KEY: str = ""
 
     model_config = {"env_file": ".env"}
 
