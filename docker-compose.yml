@@ -1,0 +1,87 @@
+services:
+  # SQL Server Database
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: pdms-mssql
+    environment:
+      ACCEPT_EULA: 'Y'
+      SA_PASSWORD: 'password!123'
+      MSSQL_PID: 'Developer'
+      MSSQL_MEMORY_LIMIT_MB: 2048
+    ports:
+      - '1433:1433'
+    volumes:
+      - mssql_data:/var/opt/mssql
+    networks:
+      - pdms_network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: pdms-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - pdms_network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+    container_name: pdms-backend
+    environment:
+      DATABASE_URL: 'mssql+pyodbc://sa:password!123@mssql:1433/pdms_db?driver=ODBC+Driver+17+for+SQL+Server'
+      REDIS_URL: 'redis://redis:6379/0'
+      SECRET_KEY: 'pdms-super-secret-key-change-this-in-production-min32'
+      ALGORITHM: 'HS256'
+      ACCESS_TOKEN_EXPIRE_MINUTES: '30'
+      REFRESH_TOKEN_EXPIRE_DAYS: '7'
+      DEBUG: 'True'
+      AI_PROVIDER: 'gemini'
+      GEMINI_API_KEY: 'AIzaSyA61xMJcLJcTXnQQRZzaZNzD49NpzlLDgA'
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - mssql
+      - redis
+    networks:
+      - pdms_network
+    restart: unless-stopped
+
+  # Frontend - Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    container_name: pdms-frontend
+    ports:
+      - '5500:80'
+      - '443:443'
+    depends_on:
+      - backend
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - pdms_network
+    restart: unless-stopped
+
+volumes:
+  mssql_data:
+  redis_data:
+
+networks:
+  pdms_network:
+    driver: bridge

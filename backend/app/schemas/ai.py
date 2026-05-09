@@ -44,7 +44,7 @@ class ICDSuggestResponse(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "codes": [
                     {"code": "R07.9", "description": "Chest pain, unspecified", "confidence": 0.95},
