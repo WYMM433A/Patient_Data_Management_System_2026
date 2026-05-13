@@ -41,9 +41,8 @@ PDMS is **not** a full Hospital Management System. It is scoped specifically to 
 - Chronic disease care plans
 - Role-based access control (RBAC)
 - Full audit logging
-- AI-assisted clinical tools
 
-**Out of Scope:** Inpatient wards, billing, pharmacy inventory, multi-branch networks, HL7/FHIR interoperability.
+**Out of Scope:** Inpatient wards, billing, pharmacy inventory, multi-branch networks, HL7/FHIR interoperability, patient portal, AI-assisted clinical tools (planned for future).
 
 ---
 
@@ -56,7 +55,6 @@ PDMS is **not** a full Hospital Management System. It is scoped specifically to 
 | **Nurse** | Record vitals, view patient history, update vaccination records |
 | **Receptionist** | Register patients, book/cancel appointments |
 | **Lab Technician** | View pending orders, upload results, flag abnormals |
-| **Patient** | View own records, prescriptions, lab results, vaccination history |
 
 ---
 
@@ -106,8 +104,7 @@ Receptionist books scheduled follow-up
 | **Database** | Microsoft SQL Server (local: Windows Auth, production: SQL Server Auth on AWS EC2) |
 | **Auth** | JWT (access + refresh tokens), bcrypt password hashing |
 | **Caching** | Redis (patient summaries, RBAC lookups) |
-| **Frontend** | Next.js (planned) |
-| **AI** | OpenAI GPT-4o-mini (planned, post-core modules) |
+| **Frontend** | HTML5, Vanilla JavaScript, CSS3 |
 
 ---
 
@@ -222,90 +219,12 @@ HTTP Request
 
 ---
 
-## AI-Powered Features
-
-All 5 features are built on top of existing database tables — no schema changes required. Planned for implementation after all core modules are complete, using **OpenAI GPT-4o-mini**.
-
----
-
-### 1. Auto-SOAP Scribe
-**Endpoint:** `POST /ai/soap-draft` · **Role:** Doctor
-
-Doctor types raw, shorthand clinical notes. The AI extracts the structured SOAP fields and suggests an ICD-10 code. The doctor reviews and confirms before saving to `clinical_notes`.
-
-```
-Raw text input
-    → GPT-4o-mini extracts S / O / A / P
-    → Suggests ICD-10 code
-    → Doctor confirms → saved to clinical_notes + diagnoses
-```
-
----
-
-### 2. Patient Briefing "Clinical Cliffnotes"
-**Endpoint:** `GET /patients/{id}/ai-summary` · **Role:** Doctor
-
-When a doctor opens a patient profile, a 3-sentence clinical summary is generated from recent vitals, diagnoses, and active prescriptions — eliminating the need to scroll through 20 tables before an encounter.
-
-```
-JOIN: vitals + diagnoses + prescriptions (last 3 months)
-    → GPT-4o-mini generates 3-sentence clinical summary
-    → Shown at top of patient profile
-```
-
----
-
-### 3. Lab Result Plain English Interpreter
-**Endpoint:** `GET /lab-orders/{id}/ai-explain` · **Role:** Patient
-
-Patients often panic when they see "High" or "Low" on a report. This feature explains each lab result row in plain, non-medical language tailored to the patient.
-
-```
-lab_results rows for an order
-    → GPT-4o-mini explains each value in patient-friendly language
-    → e.g. "Your iron is a bit low, which may explain why you've been tired"
-```
-
----
-
-### 4. AI Referral Letter Draft
-**Endpoint:** `POST /ai/referral-draft` · **Role:** Doctor
-
-When a referral is needed, the AI drafts a professional clinical referral letter using the current encounter's SOAP note and the patient's medical history. The doctor edits and saves it to `referrals.reason`.
-
-```
-Current encounter SOAP note + patient medical_history
-    → GPT-4o-mini drafts professional referral letter
-    → Pre-fills referrals.reason for doctor to review and save
-```
-
----
-
-### 5. Chronic Disease Trend Hunter ⭐
-**Endpoint:** `GET /patients/{id}/ai-trend-analysis` · **Role:** Doctor
-
-The most architecturally significant AI feature. Demonstrates time-series querying, index utilisation, and AI-powered pattern detection in one endpoint.
-
-```
-SELECT last 6 months of vitals ORDER BY recorded_at
-    → Python computes per-field deltas between visits
-       e.g. BP sys: [120, 122, 124, 126, 128] → +1.6% per visit
-    → GPT-4o-mini narrates clinical significance
-    → e.g. "Blood pressure has been rising ~2% each visit over 6 months
-            despite stable weight — may indicate developing hypertension"
-```
-
-This feature directly showcases the `vitals` table's index on `patient_id + recorded_at`, proving that the advanced indexing decisions have real, measurable clinical value.
-
----
-
 ## Getting Started
 
 ### Prerequisites
 - Python 3.13+
 - Microsoft SQL Server (local via SSMS)
 - Redis (for caching)
-- Node.js 24+ (for frontend, when ready)
 
 ### 1. Database Setup
 Run all SQL files in SSMS in order:
@@ -359,17 +278,15 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 REDIS_URL=redis://localhost:6379
 
 DEBUG=true
-
-# Added when AI features are implemented:
-# OPENAI_API_KEY=sk-...
 ```
 
 ---
 
-## Presentation Demo Scenarios
+### AI-Powered Clinical Features
+1. **Auto-SOAP Scribe** — AI-powered extraction of SOAP fields from raw clinical notes
+2. **Patient Clinical Summary** — AI-generated 3-sentence clinical briefing from recent vitals, diagnoses, and prescriptions
+3. **ICD_10 Code Suggestion** — AI-powered suggest ICD_Code based on the provided Symptoms
 
-The live demo covers both core clinical workflows end-to-end:
 
-1. **Acute Visit Demo** — Register new patient → Book appointment → Record vitals → Open encounter → Write SOAP note → Issue prescription (trigger allergy check) → Order lab test → Upload result → Close encounter → Show AI Auto-SOAP Scribe and Lab Plain English features
-
-2. **Chronic Disease Demo** — Return patient with 6-month history → Open follow-up encounter → Show vitals trend chart → Trigger AI Trend Hunter → Update care plan → Create referral → Show AI Referral Draft feature
+### Frontend
+- Full React/Next.js frontend replacement for current vanilla JavaScript implementation
