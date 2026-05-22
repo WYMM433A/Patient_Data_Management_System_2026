@@ -3,7 +3,9 @@
    All modules share these variables via the global (window) scope.
    ============================================================ */
 
-const BASE = "http://localhost:8000";
+const BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+  ? "http://localhost:8000"
+  : "/api";
 
 let _token       = localStorage.getItem("access_token") || "";
 let _currentUser = null;

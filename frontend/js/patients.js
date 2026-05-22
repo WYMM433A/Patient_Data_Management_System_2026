@@ -315,12 +315,9 @@ async function generatePatientSummary() {
       .join("\n") || "No recent encounters";
 
     // Call AI
-    const response = await fetch("http://localhost:8000/ai/patient-summary", {
+    const data = await  api("/ai/patient-summary",  {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("access_token")}`
-      },
+
       body: JSON.stringify({
         patient_name: `${patient.first_name} ${patient.last_name}`,
         age,
@@ -333,8 +330,6 @@ async function generatePatientSummary() {
       })
     });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || "AI error");
 
     document.getElementById("ai-summary-content").textContent = data.summary;
 

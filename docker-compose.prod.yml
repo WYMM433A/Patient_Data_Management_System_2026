@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: pdms-mssql
+    environment:
+      ACCEPT_EULA: 'Y'
+      SA_PASSWORD: 'PDMS@SSMS#123'
+      MSSQL_PID: 'Developer'
+      restart : always
+    ports:
+      - '1433:1433'
+    volumes:
+      - mssql_data:/var/opt/mssql
+    networks:
+      - pdms_network
+    restart: always
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "PDMS@SSMS#123", "-Q", "SELECT 1", "-C"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: pdms-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass PDMS@Redis#123  # ⚠️ CHANGE THIS IN PRODUCTION
+    networks:
+      - pdms_network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # FastAPI Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+    container_name: pdms-backend
+    environment:
+      DATABASE_URL: 'mssql+pyodbc://sa:PDMS%40SSMS%23123@mssql:1433/pdms_db?driver=ODBC+Driver+17+for+SQL+Server&TrustServerCertificate=yes'
+      REDIS_URL: 'redis://:PDMS@SSMS#123@redis:6379/0'  # ⚠️ Add password
+      SECRET_KEY: 'f67839d323d27f3bca8f55895b883b61606ea837cd5a4af501ef068dd0bbad97'  # ⚠️ CHANGE THIS IN PRODUCTION
+      ALGORITHM: 'HS256'
+      ACCESS_TOKEN_EXPIRE_MINUTES: '30'
+      REFRESH_TOKEN_EXPIRE_DAYS: '7'
+      DEBUG: 'False'  # ⚠️ Changed to False for production
+      AI_PROVIDER: 'gemini'
+      GEMINI_API_KEY: ${GEMINI_API_KEY}  # ⚠️ Move to secrets, don't commit
+      CORS_ORIGINS: "[\"https://wymm.online\",\"https://www.wymm.online\"]"
+    ports:
+      - '8000:8000'
+    volumes:
+      - ./backend:/app
+    depends_on:
+      mssql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pdms_network
+    restart: always
+
+  # Frontend - Nginx (serves static + reverse proxy)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+    container_name: pdms-frontend
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - backend
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt/live/wymm.online/fullchain.pem:/etc/letsencrypt/live/wymm.online/fullchain.pem:ro
+      - /etc/letsencrypt/live/wymm.online/privkey.pem:/etc/letsencrypt/live/wymm.online/privkey.pem:ro
+      - /etc/letsencrypt/archive/wymm.online/:/etc/letsencrypt/archive/wymm.online/:ro
+    networks:
+      - pdms_network
+    restart: always
+    healthcheck:
+      test: [CMD, /opt/mssql-tools/bin/sqlcmd, -S, localhost, -U, sa, -P, 'PDMS@SSMS#123', -Q, 'SELECT 1']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  mssql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  pdms_network:
+    driver: bridge

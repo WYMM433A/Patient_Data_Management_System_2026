@@ -14,7 +14,13 @@ class Settings(BaseSettings):
     AI_PROVIDER: str = "gemini"
     GEMINI_API_KEY: str = ""
 
-    model_config = {"env_file": ".env"}
+    # Add these two fields to handle the production environment variables
+    ALLOWED_HOSTS: str = "localhost,127.0.0.1"
+    CORS_ORIGINS: str = "[]"
 
+    model_config = {
+        "env_file": ".env",
+        "extra": "ignore"  # This is the "safety net" to prevent future crashes
+    }
 
 settings = Settings()
